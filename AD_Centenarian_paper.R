@@ -687,6 +687,42 @@
         return(res0)
     }
 
+    # function to plot figure 3
+    figure_3 = function(res_ratio_df_100it, ad_snps){
+        # add information about new/known locus
+        new_info = ad_snps[, c('snpid', 'new_known')]
+        res_ratio_df_100it = merge(res_ratio_df_100it, new_info, by.x = 'rsid', by.y = 'snpid')
+        # need to restructure the data
+        dt = data.frame()
+        for (i in 1:nrow(res_ratio_df_100it)){
+            tmp = data.frame(gene = rep(as.character(res_ratio_df_100it$gene[i]), 2), n = c(res_ratio_df_100it$n_controls[i], res_ratio_df_100it$n_chc[i]), Type = c('Normal Controls', 'Centenarians'), new = rep(res_ratio_df_100it$new_known[i], 2))
+            dt = rbind(dt, tmp)
+        }
+        dt$n[which(dt$n == 16200)] = 16000
+        dt$new = ifelse(dt$new == 'new', 'New SNP in latest GWAS', 'Known SNP')
+        # plot is a mirror barplot
+        plt = ggplot(dt, aes(x=reorder(gene, n), y=n, fill=Type)) + geom_bar(stat="identity", position="dodge") + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + 
+                xlab('') + ylab('Number of controls to achieve 80% power')
+        # create lines df
+        cutoff <- data.frame(gene = c(-Inf, Inf), n = c(1000, 2500, 7500, 16000), cutoff = factor(c('N=1000', 'N=2500', 'N=7500', 'N=16000 ~ Did not converge')), Type = 'Centenarians')
+        plt = plt + facet_grid(cols = vars(new), scales = 'free')
+        plt = plt + geom_hline(aes(yintercept=n, color=cutoff, linetype = Type), data=cutoff, show_guide=TRUE)
+        pdf('figure_supplementary_power.pdf', width = 16, height = 9)
+        plt
+        dev.off()
+
+        # then also plot the ratio
+        res_ratio_df_100it = res_ratio_df_100it[order(res_ratio_df_100it$ratio_mean),]
+        res_ratio_df_100it$gene = factor(res_ratio_df_100it$gene, levels = res_ratio_df_100it$gene)
+        res_ratio_df_100it$new = ifelse(res_ratio_df_100it$new_known == 'new', 'New SNP in latest GWAS', 'Known SNP')
+        plt2 = ggplot(res_ratio_df_100it, aes(x = gene, y = ratio_mean, fill=Description)) + geom_bar(stat = 'identity') + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + 
+            xlab('') + ylab('Number of centenarians / Number of normal controls')
+        plt2 = plt2 + facet_grid(cols = vars(res_ratio_df_100it$new), scales = 'free')
+        pdf('figure_3.pdf', width = 16, height = 9)
+        plt2
+        dev.off()
+    }
+
 # MAIN ANALYSES
 # 1. read variants from AD paper -- both clinical AD and proxy data
     ad_snps <- fread("AD_snps.txt", h=T, stringsAsFactors=F)
@@ -765,6 +801,8 @@
     checkAssociations(ratios_ad_ctr, ad_snps)
     # run analysis for ad_chc
     checkAssociations(ctr_chc_ratios, ad_snps)
+    # also compare new loci with old loci
+
 
 # 11. extract frequencies
     res_frequencies = extract_frequencies(ratios)
@@ -816,13 +854,18 @@
     res_ratio_df_100it = res_ratio_df_100it[order(res_ratio_df_100it$ratio_mean),]
     res_ratio_df_100it$gene = factor(res_ratio_df_100it$gene, levels = res_ratio_df_100it$gene)
 
+# 14. gene-set enrichment analysis
+    # do gsea with significant snps at p<0.05 --> 16 SNPs (RESULTS_19707)
+    # do gsea with SNPs with n_chc/n_controls >2 --> 27 SNPs (RESULTS_40816)
+    # do gsea with SNPs with n_chc/n_controls >3 --> 21 SNPs (RESULTS_66490)
 # PLOTS
 # 1. figure 1 should be the maf, effect-size and ratio plots
     plot_figure1(singleAssoc, ratios, ad_snps, all_freqs_plot)
 
 # 2. figure 2 should be the density plot
     figure_2(prs_allSNPs, prs_allSNPs_noAPOE, assoc_all_combined, pheno)
-
+# 3. figure 3 should be the simulation experiment
+    figure_3(res_ratio_df_100it, ad_snps)
 # TABLES
 # 1. extract demographics
     # AD
