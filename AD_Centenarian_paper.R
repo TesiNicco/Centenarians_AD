@@ -725,8 +725,8 @@
 
 # MAIN ANALYSES
 # 1. read variants from AD paper -- both clinical AD and proxy data
-    ad_snps <- fread("AD_snps.txt", h=T, stringsAsFactors=F)
-    ad_snps_proxy <- fread("Bellenguez_2022.txt", h=T, stringsAsFactors=F)
+    ad_snps <- fread("AD_snps_clinical_Bellenguez.txt", h=T, stringsAsFactors=F)
+    ad_snps_proxy <- fread("AD_snps_proxy_Bellenguez.txt", h=T, stringsAsFactors=F)
     # rename columns
     colnames(ad_snps) = c('rsid', 'chrom', 'pos', 'gene', 'locus', 'minor/major', 'or (95% ci)', 'p', 'info')
     # add odds ratio and confidence interval
@@ -898,4 +898,4 @@
     write.table(ratios_annot, 'table_s3.txt', quote=F, row.names=F, sep="\t", dec=',')
 
 # WORKSPACE
-    save.image('20220927_workspace_final.RData')
+    save.image('20220929_workspace_final.RData')
