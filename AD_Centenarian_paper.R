@@ -312,13 +312,16 @@
     plot_figure1 <- function(singleAssoc, ratios, ad_snps, all_freqs_plot, snps_info){
         # create right order for the snps
             tmp = ratios[which(ratios$test == 'ad_vs_chc')]; tmp = tmp[order(tmp$ratio_beta),]; 
+            tmp$gene[which(duplicated(tmp$gene) == TRUE)] = paste0(tmp$gene[which(duplicated(tmp$gene) == TRUE)], ' (2)')
             tmp$gene = factor(tmp$gene, levels = tmp$gene)
+            ad_snps_new_info = ad_snps[, c('locus', 'new_known')]
+            tmp = merge(tmp, ad_snps_new_info, by = 'locus')
         # plot 1 is the MAF plot
             # finally let's do a plot
             all_freqs_plot = merge(all_freqs_plot, snps_info, by = 'locus')
             all_freqs_plot$MAF_FREQS = ifelse(all_freqs_plot$ALT_FREQS < 0.5, all_freqs_plot$ALT_FREQS, 1 - all_freqs_plot$ALT_FREQS)
             # reorder before the plot
-            ratios_values = tmp[, c('ratio_beta', 'locus', 'gene')]; all_freqs_plot = merge(all_freqs_plot, ratios_values, by = 'locus')
+            ratios_values = tmp[, c('ratio_beta', 'locus', 'gene', 'new_known')]; all_freqs_plot = merge(all_freqs_plot, ratios_values, by = 'locus')
             all_freqs_plot = all_freqs_plot[order(all_freqs_plot$ratio_beta),]
             # change labels and we're done
             all_freqs_plot$Phenotype[which(all_freqs_plot$Phenotype == 'AD')] = 'AD cases'
@@ -340,7 +343,7 @@
             new_snps = all_freqs_plot$gene[which(all_freqs_plot$new_known == 'new')]
             grp_plot$label = ifelse(grp_plot$Gene %in% new_snps, 'New SNP in latest GWAS', 'Known SNP')
             # plot
-            plt_grp = ggplot(grp_plot, aes(fill=Study, y=Effect, x=Gene)) + geom_bar(position="dodge", stat="identity") + coord_cartesian(ylim = c(-1.5, 2.5), clip = "on") + xlab("") + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + geom_errorbar(aes(ymin = low, ymax = up), width = 0.2, color = 'grey60', position=position_dodge(.9)) + ylim(-1, 1)
+            plt_grp = ggplot(grp_plot, aes(fill=Study, y=Effect, x=Gene)) + geom_bar(position="dodge", stat="identity") + coord_cartesian(ylim = c(-1, 1), clip = "on") + xlab("") + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + geom_errorbar(aes(ymin = low, ymax = up), width = 0.2, color = 'grey60', position=position_dodge(.9)) + ylim(-1, 1)
             plt_grp = plt_grp + facet_grid(cols = vars(label), drop = FALSE, scales = "free")
         # plot 3 is the effect-size ratio
             tmp$Comparison_symbol = ''; tmp$Comparison_symbol[which(tmp$two_tail_p <= 0.05)] = 'x'
@@ -379,6 +382,60 @@
         return('** plot is done!')
     }
 
+    # function to draw figure S1
+    plot_figure_S1 <- function(singleAssoc, ratios, data_path, ad_snps){
+        # create right order for the snps
+            tmp = ratios[which(ratios$test == 'ad_vs_ctr')]
+            tmp$ratio_beta = tmp$beta_aligned / tmp$gwas_beta; tmp = tmp[order(tmp$ratio_beta),]; 
+            tmp$gene[which(duplicated(tmp$gene) == TRUE)] = paste0(tmp$gene[which(duplicated(tmp$gene) == TRUE)], ' (2)')
+            tmp$gene = factor(tmp$gene, levels = tmp$gene)
+            ad_snps_new_info = ad_snps[, c('locus', 'new_known')]
+            tmp = merge(tmp, ad_snps_new_info, by = 'locus')
+        # plot 1 is the grouped barplot with effect-sizes
+            # prepare data for grouped barplot
+            grp_plot = list()
+            for (i in 1:nrow(tmp)){ grp_plot[[(length(grp_plot) + 1)]] = data.frame(Gene = rep(tmp$gene[i], 2), Effect = c(tmp$gwas_beta[i], tmp$beta_aligned[i]), Study = c('GWAS', 'AD cases vs. Centenarians'), low = c(tmp$gwas_beta[i] - (1.96*tmp$se_gwas[i]), tmp$beta_aligned[i] - (1.96*tmp$se[i])), up = c(tmp$gwas_beta[i] + (1.96*tmp$se_gwas[i]), tmp$beta_aligned[i] + (1.96*tmp$se[i]))) }
+            grp_plot = rbindlist(grp_plot)
+            # add labels for new of known snp
+            new_snps = all_freqs_plot$gene[which(all_freqs_plot$new_known == 'new')]
+            grp_plot$label = ifelse(grp_plot$Gene %in% new_snps, 'New SNP in latest GWAS', 'Known SNP')
+            # plot
+            plt_grp = ggplot(grp_plot, aes(fill=Study, y=Effect, x=Gene)) + geom_bar(position="dodge", stat="identity") + coord_cartesian(ylim = c(-1, 1), clip = "on") + xlab("") + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + geom_errorbar(aes(ymin = low, ymax = up), width = 0.2, color = 'grey60', position=position_dodge(.9)) + ylim(-1, 1)
+            plt_grp = plt_grp + facet_grid(cols = vars(label), drop = FALSE, scales = "free")
+        # plot 3 is the effect-size ratio
+            tmp$Comparison_symbol = ''; tmp$Comparison_symbol[which(tmp$two_tail_p <= 0.05)] = 'x'
+            tmp$Comparison = 'Not different'; tmp$Comparison[which(tmp$two_tail_p <= 0.05)] = 'Different from published'
+            tmp$adj_p = p.adjust(tmp$p, 'fdr')
+            # add labels for new of known snp
+            tmp$label = ifelse(tmp$gene %in% new_snps, 'New SNP in latest GWAS', 'Known SNP')
+            # find significant associations to be annotated
+            star_df = data.frame(x = tmp$gene[which(tmp$p <= 0.05)], y = tmp$up_ci_ratio[which(tmp$p <= 0.05)], comparison = tmp$Comparison[which(tmp$p <= 0.05)], label = tmp$label[which(tmp$p <= 0.05)])
+            fdr_df = data.frame(x = tmp$gene[which(tmp$adj_p <= 0.05)], y = tmp$up_ci_ratio[which(tmp$adj_p <= 0.05)], comparison = tmp$Comparison[which(tmp$adj_p <= 0.05)], label = tmp$label[which(tmp$adj_p <= 0.05)])
+            #tmp$ratio_beta[which(tmp$gene == 'TREML2')] = NA; tmp$low_ci_ratio[which(tmp$gene == 'TREML2')] = NA; tmp$up_ci_ratio[which(tmp$gene == 'TREML2')] = NA
+            # the actual plot
+            plt_ratio = ggplot(tmp, aes(x = gene, y = ratio_beta, fill = Comparison)) + geom_bar(stat = 'identity') + geom_errorbar(aes(ymin = low_ci_ratio, ymax = up_ci_ratio), width = 0.4, color = 'grey60') + geom_hline(yintercept = 1, linetype = 'dashed', col = 'red') +
+                theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + xlab('') + ylab('Effect-size Ratio')
+            plt_ratio = plt_ratio + facet_grid(cols = vars(label), drop = FALSE, scales = "free")
+            # annotation of significant associations
+            ann_sign_assoc = data.frame(gene = star_df$x, ratio_beta = star_df$y, Comparison = star_df$comparison, label = star_df$label)
+            plt_ratio = plt_ratio + geom_text(data = ann_sign_assoc, label = '*')
+            # annotation of fdr significant associations
+            ann_fdr_assoc = data.frame(gene = fdr_df$x, ratio_beta = fdr_df$y, Comparison = fdr_df$comparison, label = fdr_df$label)
+            plt_ratio = plt_ratio + geom_text(data = ann_fdr_assoc, label = '**', vjust = -1.5)
+            # annotation of mean change
+            change_df = data.frame(gene = c(1,1,1), ratio_beta = c(15, 15, 13), Comparison = rep('Not different', 3), label = c('Known SNP', 'New SNP in latest GWAS', 'Known SNP'))
+            labels_change = c(paste0('Median ratio known SNP = ', round(median(tmp$ratio_beta[(!(is.na(tmp$ratio_beta))) & tmp$label == 'Known SNP']), 2)),
+                paste0('Median ratio new SNP = ', round(median(tmp$ratio_beta[(!(is.na(tmp$ratio_beta))) & tmp$label != 'Known SNP']), 2)),
+                paste0('Median ratio overall = ', round(median(tmp$ratio_beta[(!(is.na(tmp$ratio_beta)))]), 2)))
+            plt_ratio = plt_ratio + geom_text(data = change_df, label = labels_change, hjust = 0)
+        # manually combine the plots together
+        combined_plot = ggarrange(plotlist = list(plt_grp, plt_ratio), nrow = 2, ncol = 1, labels = "AUTO")
+        pdf('figure_s1.pdf', height = 12, width = 16)
+        combined_plot
+        dev.off()
+        return('** plot is done!')
+    }
+
     # function to draw figure 2 along with the forest plot of associations
     figure_2 <- function(prs_allSNPs, prs_allSNPs_noAPOE, assoc_all_combined, pheno){
         # densities
@@ -393,7 +450,7 @@
             children_tokeep = prs_allSNPs[which(prs_allSNPs$IID %in% children$V2 & !(prs_allSNPs$IID %in% tmp$IID)),]
             children_tokeep_noAPOE = prs_allSNPs_noAPOE[which(prs_allSNPs_noAPOE$IID %in% children$V2 & !(prs_allSNPs_noAPOE$IID %in% tmp$IID)),]
             # add children to other samples
-            tmp = rbind(tmp, children_tokeep); tmp_noAPOE = rbind(tmp_noAPOE, children_tokeep_noAPOE)
+            #tmp = rbind(tmp, children_tokeep); tmp_noAPOE = rbind(tmp_noAPOE, children_tokeep_noAPOE)
             # add a label for centenarians, controls and AD
             tmp$Class = 'AD cases'; tmp$Class[which(tmp$PHENO == 'Centenarian')] = 'Centenarians'; tmp$Class[which(tmp$PHENO %in% c("Control_100plus", "Control_LASA", "Control_other_twin", "Control_path", "SCD"))] = 'Controls';
             tmp$Class[which(tmp$PHENO == 'family_100plus')] = 'Children'
@@ -426,7 +483,7 @@
             tmp_forplot$Subgroup[which(tmp_forplot$Subgroup == 'ad_ctr')] = 'AD vs. Controls'
             tmp_forplot$Subgroup[which(tmp_forplot$Subgroup == 'chc_ad')] = 'AD vs. Centenarians'
             tmp_forplot$Subgroup[which(tmp_forplot$Subgroup == 'chc_ctr')] = 'Controls vs. Centenarians'
-            tmp_forplot$Subgroup[which(tmp_forplot$Subgroup == 'children_ctr')] = 'Controls vs. Children'
+            tmp_forplot$Subgroup[which(tmp_forplot$Subgroup == 'children_vs_ctr')] = 'Controls vs. Children'
             # adjust pvalues
             tmp_forplot$"P (FDR)" = signif(tmp_forplot$"P (FDR)", digits = 3)
             tmp_forplot$"P (FDR)"[is.na(tmp_forplot$"P (FDR)")] = ""
@@ -484,7 +541,7 @@
     }
 
     # function to run power analysis in parallel
-    power_function = function(i, assoc, lit, snplist, type, sampling){
+    power_function = function(i, assoc, lit, n_cases, snplist, type, sampling, do_sampling){
         snp = snplist[i]
         df_converge = data.frame()
         df_all = data.frame()
@@ -493,15 +550,18 @@
             or_chc = exp(assoc$beta_aligned[which(assoc$locus == snp & assoc$test == 'ad_vs_chc')])
             or_ctr = exp(assoc$beta_aligned[which(assoc$locus == snp & assoc$test == 'ad_vs_ctr')])
             # also do this in a sampling framework
-            or_chc_sample = exp(rnorm(mean = assoc$beta_aligned[which(assoc$locus == snp & assoc$test == 'ad_vs_chc')], sd = assoc$se[which(assoc$locus == snp & assoc$test == 'ad_vs_chc')], n=sampling))
-            or_ctr_sample = exp(rnorm(mean = assoc$beta_aligned[which(assoc$locus == snp & assoc$test == 'ad_vs_ctr')], sd = assoc$se[which(assoc$locus == snp & assoc$test == 'ad_vs_ctr')], n=sampling))
+            if (do_sampling == TRUE){
+                or_chc_sample = exp(rnorm(mean = assoc$beta_aligned[which(assoc$locus == snp & assoc$test == 'ad_vs_chc')], sd = assoc$se[which(assoc$locus == snp & assoc$test == 'ad_vs_chc')], n=sampling))
+                or_ctr_sample = exp(rnorm(mean = assoc$beta_aligned[which(assoc$locus == snp & assoc$test == 'ad_vs_ctr')], sd = assoc$se[which(assoc$locus == snp & assoc$test == 'ad_vs_ctr')], n=sampling))
+            } else {
+                or_chc_sample = or_chc
+                or_ctr_sample = or_ctr
+            }
             # get other parameters
             gene = unique(assoc$gene[which(assoc$locus == snp)])
             maf_gwas = lit$maf[which(lit$locus == snp)]
             alpha_chosen = 0.05; power = 0.80
             cat(paste0('** working on SNP --> ', i, ': ', gene, '\n'))
-            # fix number of cases to 5000
-            n_cases = 8000
             # define the step for increasing number of controls and the maximum size of controls (2*ncases) -- now using 8000 AD cases and 200 samples as a step
             step_controls = 200
             max_controls = n_cases * 2
@@ -510,7 +570,7 @@
             desired_power = 0.80
             pw = 0
             # main loop for controls
-            while (pw <= desired_power && n_controls <= max_controls){
+            while (pw <= desired_power && n_controls <= (max_controls - step_controls)){
                 # increase size of controls
                 n_controls = n_controls + step_controls
                 # calculate power
@@ -521,7 +581,11 @@
                 }
                 pw_ctr$Gene = snp
                 # update the power
-                pw = mean(na.omit(pw_ctr$Power_at_Alpha_0.05))
+                if (is.na(pw_ctr$Power_at_Alpha_0.05)){
+                    pw = 0
+                } else {
+                    pw = mean(na.omit(pw_ctr$Power_at_Alpha_0.05))
+                }
                 # save things
                 df_all = rbind(df_all, pw_ctr)
             }
@@ -687,46 +751,35 @@
         return(res0)
     }
 
-    # function to plot figure 3
-    figure_3 = function(res_ratio_df_100it, ad_snps){
-        # add information about new/known locus
-        new_info = ad_snps[, c('snpid', 'new_known')]
-        res_ratio_df_100it = merge(res_ratio_df_100it, new_info, by.x = 'rsid', by.y = 'snpid')
-        # need to restructure the data
-        dt = data.frame()
-        for (i in 1:nrow(res_ratio_df_100it)){
-            tmp = data.frame(gene = rep(as.character(res_ratio_df_100it$gene[i]), 2), n = c(res_ratio_df_100it$n_controls[i], res_ratio_df_100it$n_chc[i]), Type = c('Normal Controls', 'Centenarians'), new = rep(res_ratio_df_100it$new_known[i], 2))
-            dt = rbind(dt, tmp)
-        }
-        dt$n[which(dt$n == 16200)] = 16000
-        dt$new = ifelse(dt$new == 'new', 'New SNP in latest GWAS', 'Known SNP')
-        # plot is a mirror barplot
-        plt = ggplot(dt, aes(x=reorder(gene, n), y=n, fill=Type)) + geom_bar(stat="identity", position="dodge") + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + 
-                xlab('') + ylab('Number of controls to achieve 80% power')
-        # create lines df
-        cutoff <- data.frame(gene = c(-Inf, Inf), n = c(1000, 2500, 7500, 16000), cutoff = factor(c('N=1000', 'N=2500', 'N=7500', 'N=16000 ~ Did not converge')), Type = 'Centenarians')
-        plt = plt + facet_grid(cols = vars(new), scales = 'free')
-        plt = plt + geom_hline(aes(yintercept=n, color=cutoff, linetype = Type), data=cutoff, show_guide=TRUE)
-        pdf('figure_supplementary_power.pdf', width = 16, height = 9)
-        plt
-        dev.off()
-
-        # then also plot the ratio
-        res_ratio_df_100it = res_ratio_df_100it[order(res_ratio_df_100it$ratio_mean),]
-        res_ratio_df_100it$gene = factor(res_ratio_df_100it$gene, levels = res_ratio_df_100it$gene)
-        res_ratio_df_100it$new = ifelse(res_ratio_df_100it$new_known == 'new', 'New SNP in latest GWAS', 'Known SNP')
-        plt2 = ggplot(res_ratio_df_100it, aes(x = gene, y = ratio_mean, fill=Description)) + geom_bar(stat = 'identity') + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + 
-            xlab('') + ylab('Number of centenarians / Number of normal controls')
-        plt2 = plt2 + facet_grid(cols = vars(res_ratio_df_100it$new), scales = 'free')
-        pdf('figure_3.pdf', width = 16, height = 9)
-        plt2
-        dev.off()
+    # function to check children -- keep 1 child per family
+    checkchildren <- function(tmp_prs, pheno_final_raw){
+        # separate children from controls
+        children = tmp_prs[which(tmp_prs$PHENO == 'family_100plus'),]
+        no_children = tmp_prs[which(tmp_prs$PHENO != 'family_100plus'),]
+        # add 100plus family id
+        children = merge(children, pheno_final_raw, by.x = 'IID', by.y = 'ID_GWAS')
+        children$family_100plus = str_split_fixed(children$ID_100plus, '_', 3)[, 1]
+        children = children[sample(nrow(children)),]
+        children_unique = children[!duplicated(children$family_100plus),]
+        # re-join with controls
+        newdf = rbind.fill(children_unique, no_children[which(no_children$PHENO != 'family_100plus'),])
+        # now we need to calculate pcs
+        fam = fread('/project/holstegelab/Share/gwas_array/TOPMED/data/Pop_stratification_IBD/data_common_20k_random_hg19.fam', h=F, stringsAsFactors=F)
+        fam_sb = fam[which(fam$V2 %in% newdf$IID),]
+        write.table(fam_sb[, c('V1', 'V2')], 'samples_children_controls.txt', quote=F, row.names=F, col.names=F)
+        system('plink --bfile /project/holstegelab/Share/gwas_array/TOPMED/data/Pop_stratification_IBD/data_common_20k_random_hg19 --keep samples_children_controls.txt --pca --out pca_children_controls')
+        # read pca components
+        pcs = fread('pca_children_controls.eigenvec', h=F, stringsAsFactors=F)
+        colnames(pcs) = c('FID', 'IID', paste0('PC', seq(1, 20)))
+        pcs_sb = pcs[, c('IID', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5')]
+        tmp_prs = merge(newdf, pcs_sb, by = 'IID')
+        return(tmp_prs)
     }
 
 # MAIN ANALYSES
 # 1. read variants from AD paper -- both clinical AD and proxy data
-    ad_snps <- fread("AD_snps_clinical_Bellenguez.txt", h=T, stringsAsFactors=F)
-    ad_snps_proxy <- fread("AD_snps_proxy_Bellenguez.txt", h=T, stringsAsFactors=F)
+    ad_snps <- fread("AD_snps.txt", h=T, stringsAsFactors=F)
+    ad_snps_proxy <- fread("Bellenguez_2022.txt", h=T, stringsAsFactors=F)
     # rename columns
     colnames(ad_snps) = c('rsid', 'chrom', 'pos', 'gene', 'locus', 'minor/major', 'or (95% ci)', 'p', 'info')
     # add odds ratio and confidence interval
@@ -801,8 +854,6 @@
     checkAssociations(ratios_ad_ctr, ad_snps)
     # run analysis for ad_chc
     checkAssociations(ctr_chc_ratios, ad_snps)
-    # also compare new loci with old loci
-
 
 # 11. extract frequencies
     res_frequencies = extract_frequencies(ratios)
@@ -821,51 +872,94 @@
     # read literature for MAF
     lit = ad_snps_proxy[, c('locus', 'rsid', 'maf', 'gene')]
     # run the function using normal controls and centenarians
-    res_normal = mclapply(1:length(snplist), power_function, assoc = ratios, lit = lit, snplist = snplist, type = 'normal', sampling = 100, mc.cores = 8)
-    res_centen = mclapply(1:length(snplist), power_function, assoc = ratios, lit = lit, snplist = snplist, type = 'centenarians', sampling = 100, mc.cores = 8)
+    res_normal = mclapply(1:length(snplist), power_function, assoc = ratios, lit = lit, n_cases = 8000, snplist = snplist, type = 'normal', sampling = 100, do_sampling = TRUE, mc.cores = 8)
+    res_centen = mclapply(1:length(snplist), power_function, assoc = ratios, lit = lit, n_cases = 8000, snplist = snplist, type = 'centenarians', sampling = 100, do_sampling = TRUE, mc.cores = 8)
+    # same without sampling
+    set.seed(549385)
+    res_normal_nosampl = mclapply(1:length(snplist), power_function, assoc = ratios, lit = lit, n_cases = 8000, snplist = snplist, type = 'normal', sampling = 100, do_sampling = FALSE, mc.cores = 8)
+    res_centen_nosampl = mclapply(1:length(snplist), power_function, assoc = ratios, lit = lit, n_cases = 8000, snplist = snplist, type = 'centenarians', sampling = 100, do_sampling = FALSE, mc.cores = 8)
     # combine results
     res_normal_combined = rbindlist(res_normal)
     res_centen_combined = rbindlist(res_centen)
-    # calculate ratio between sample sizes
-    res_ratio_df_100it = data.frame()
-    for (snp in snplist){
-        # get the values of ctr and chc
-        ctr = res_normal_combined[which(res_normal_combined$Gene == snp),]
-        chc = res_centen_combined[which(res_centen_combined$Gene == snp),]
-        # get the max n of controls and all iterations
-        ctr_max = ctr[which(ctr$N_controls == max(ctr$N_controls)),]
-        chc_max = chc[which(chc$N_controls == max(chc$N_controls)),]
-        # create df
-        if (nrow(ctr_max) >0 & nrow(chc_max) >0){
-            df_res = data.frame(locus = snp, n_cases = 5000, n_controls = unique(ctr_max$N_controls), n_chc = unique(chc_max$N_controls), controls_mean = mean(na.omit(ctr_max$Power_at_Alpha_0.05)), controls_sd = sd(na.omit(ctr_max$Power_at_Alpha_0.05)), chc_mean = mean(na.omit(chc_max$Power_at_Alpha_0.05)), chc_sd = sd(na.omit(chc_max$Power_at_Alpha_0.05)), ratio_mean = mean(na.omit(ctr_max$N_controls/chc_max$N_controls)))
-            res_ratio_df_100it = rbind(res_ratio_df_100it, df_res)
-        }
-    }
+    res_normal_combined_nosampl = rbindlist(res_normal_nosampl)
+    res_centen_combined_nosampl = rbindlist(res_centen_nosampl)
+    # change column names and then merge
+    res_normal_combined_nosampl = res_normal_combined_nosampl[, c('Gene', 'MAF', 'OR', 'N_total', 'N_cases', 'N_controls', 'Case.Rate', 'Power_at_Alpha_0.05')]; colnames(res_normal_combined_nosampl) = c('locus', 'maf', 'or_ctr', 'n_total_ctr', 'n_cases_ctr', 'n_ctr', 'case_rate_ctr', 'power_ctr') 
+    res_centen_combined_nosampl = res_centen_combined_nosampl[, c('Gene', 'OR', 'N_total', 'N_cases', 'N_controls', 'Case.Rate', 'Power_at_Alpha_0.05')]; colnames(res_centen_combined_nosampl) = c('locus', 'or_chc', 'n_total_chc', 'n_cases_chc', 'n_chc', 'case_rate_chc', 'power_chc') 
+    res_all_combined_nosampl = merge(res_normal_combined_nosampl, res_centen_combined_nosampl, by = 'locus')
+    # add label for converged/not converged
+    res_all_combined_nosampl$converged_info = NA; res_all_combined_nosampl$converged_info[which(res_all_combined_nosampl$n_chc < 16000 & res_all_combined_nosampl$n_ctr < 16000)] = 'both'
+    res_all_combined_nosampl$converged_info[which(res_all_combined_nosampl$n_ctr == 16000 & res_all_combined_nosampl$n_chc < 16000)] = 'ctr_not_converged'
+    res_all_combined_nosampl$converged_info[which(res_all_combined_nosampl$n_ctr < 16000 & res_all_combined_nosampl$n_chc == 16000)] = 'chc_not_converged'
+    res_all_combined_nosampl$converged_info[is.na(res_all_combined_nosampl$converged_info)] = 'both_not_converged'
+    table(res_all_combined_nosampl$converged_info)
+    res_all_combined_nosampl$ratio = res_all_combined_nosampl$n_ctr / res_all_combined_nosampl$n_chc
+    # look at ratio -- mean and median
+    mean(res_all_combined_nosampl$ratio[which(res_all_combined_nosampl$converged_info != 'both_not_converged')])
+    median(res_all_combined_nosampl$ratio[which(res_all_combined_nosampl$converged_info != 'both_not_converged')])
+    # look at controls number -- mean, sd and median
+    mean(res_all_combined_nosampl$n_ctr[which(res_all_combined_nosampl$converged_info != 'both_not_converged')])
+    median(res_all_combined_nosampl$n_ctr[which(res_all_combined_nosampl$converged_info != 'both_not_converged')])
+    sd(res_all_combined_nosampl$n_ctr[which(res_all_combined_nosampl$converged_info != 'both_not_converged')])
+    # look at centenarian number -- mean, sd and median
+    mean(res_all_combined_nosampl$n_chc[which(res_all_combined_nosampl$converged_info != 'both_not_converged')])
+    median(res_all_combined_nosampl$n_chc[which(res_all_combined_nosampl$converged_info != 'both_not_converged')])
+    sd(res_all_combined_nosampl$n_chc[which(res_all_combined_nosampl$converged_info != 'both_not_converged')])
+    # select snps for functional analysis
+    gsea_input = res_all_combined_nosampl$locus[which(res_all_combined_nosampl$ratio >3)]
+    write.table(ad_snps_proxy$rsid[which(ad_snps_proxy$locus %in% gsea_input)], 'input_for_gsea.txt', quote=F, row.names=F, col.names=F)
     # add some annotation like gene and maf
-    res_ratio_df_100it = merge(res_ratio_df_100it, snps_info, by = 'locus')
+    res_all_combined_nosampl = merge(res_all_combined_nosampl, snps_info[, c('locus', 'rsid')], by = 'locus')
     # add description
-    res_ratio_df_100it$Description = ifelse(res_ratio_df_100it$ratio_mean >1, 'Centenarians value more', 'Centenarians value less')
-    res_ratio_df_100it$Description[which(res_ratio_df_100it$ratio_mean == 1)] = 'Same value (did not converge)'
+    res_all_combined_nosampl$Description = ifelse(res_all_combined_nosampl$ratio >1, 'Centenarians value more', 'Centenarians value less')
+    res_all_combined_nosampl$Description[which(res_all_combined_nosampl$ratio == 1)] = 'Same value (did not converge)'
     # add gene names and fix order for plot
     gene_info = ad_snps[, c('locus', 'gene')]
     gene_info$gene[which(duplicated(gene_info$gene) == TRUE)] = paste0(gene_info$gene[which(duplicated(gene_info$gene) == TRUE)], ' (2)')
-    res_ratio_df_100it = merge(res_ratio_df_100it, gene_info, by = 'locus')
+    res_all_combined_nosampl = merge(res_all_combined_nosampl, gene_info, by = 'locus')
     # order by ratio and fix order
-    res_ratio_df_100it = res_ratio_df_100it[order(res_ratio_df_100it$ratio_mean),]
-    res_ratio_df_100it$gene = factor(res_ratio_df_100it$gene, levels = res_ratio_df_100it$gene)
+    res_all_combined_nosampl = res_all_combined_nosampl[order(res_all_combined_nosampl$ratio),]
+    res_all_combined_nosampl$gene = factor(res_all_combined_nosampl$gene, levels = res_all_combined_nosampl$gene)
+    # for statistics, exclude the snps that did not converge
+    converged_all = res_all_combined_nosampl[which(res_all_combined_nosampl$n_ctr != 16000 | res_all_combined_nosampl$n_chc != 16000),]
+    # add new snps info
+    new_snps = ad_snps$locus[which(ad_snps$new_known == 'new')]   
+    converged_all$Type = ifelse(converged_all$locus %in% new_snps, 'New SNP in latest GWAS', 'Known SNP')
+    # plot figure 3
+    pipi = ggplot(data = converged_all, aes(x = gene, y = log(ratio), fill = Description)) + geom_bar(stat = 'identity') + 
+        xlab("") + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + geom_hline(yintercept = 1, linetype = 'dashed', col = 'red')
+    pipi = pipi + facet_grid(cols = vars(Type), scales = 'free')    
+    change_df = data.frame(gene = c(1,1,1), ratio = c(40, 37, 40), Type = c('Known SNP', 'Known SNP', 'New SNP in latest GWAS'), Description = rep('Centenarians value more', 3))
+    labels_change = c(paste0('Mean ratio known SNP = ', round(mean(converged_all$ratio[which(converged_all$Type == 'Known SNP')]), 2)),
+        paste0('Mean ratio new SNP = ', round(mean(converged_all$ratio), 2)),
+        paste0('Mean ratio overall = ', round(mean(converged_all$ratio[which(converged_all$Type == 'New SNP in latest GWAS')]), 2)))
+    pipi = pipi + geom_text(data = change_df, label = c(labels_change), hjust = 0)
+    pdf('figure_3.pdf', width = 16, height = 9)
+    pipi
+    dev.off()
+    # plot figure S2 as the raw number of samples including the SNP that did not converge
+    # need to restructure data
+    dataplot = data.frame()
+    for (i in 1:nrow(res_all_combined_nosampl)){
+        dataplot = rbind(dataplot, data.frame(gene = res_all_combined_nosampl$gene[i], n = c(res_all_combined_nosampl$n_ctr[i], res_all_combined_nosampl$n_chc[i]), Type = c('Normal Controls', 'Centenarians'), desc = res_all_combined_nosampl$Description[i]))
+    }
+    res_all_combined_nosampl$Description[which(res_all_combined_nosampl$n_chc == 16000 & res_all_combined_nosampl$n_ctr < 16000)] = 'Centenarians did not converge'
+    res_all_combined_nosampl$Description[which(res_all_combined_nosampl$n_chc < 16000 & res_all_combined_nosampl$n_ctr == 16000)] = 'Normal Controls did not converge'
+    pupu = ggplot(res_all_combined_nosampl, aes(x = n_ctr, y = n_chc, color = Description)) + geom_jitter(size = 4, alpha = 0.6) + geom_abline(slope = 1, linetype = 'dashed', col = 'grey40') + xlab('Number of Normal Controls') +
+        ylab('Number of Centenarians') + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_colour_viridis_d()
+    pdf('figure_s2.pdf', height = 7, width = 9)
+    pupu
+    dev.off()
+    # finally output the table
+    write.table(res_all_combined_nosampl, 'table_s6.txt', quote = F, row.names = F, sep = "\t", dec = ',')
 
-# 14. gene-set enrichment analysis
-    # do gsea with significant snps at p<0.05 --> 16 SNPs (RESULTS_19707)
-    # do gsea with SNPs with n_chc/n_controls >2 --> 27 SNPs (RESULTS_40816)
-    # do gsea with SNPs with n_chc/n_controls >3 --> 21 SNPs (RESULTS_66490)
 # PLOTS
 # 1. figure 1 should be the maf, effect-size and ratio plots
     plot_figure1(singleAssoc, ratios, ad_snps, all_freqs_plot)
 
 # 2. figure 2 should be the density plot
     figure_2(prs_allSNPs, prs_allSNPs_noAPOE, assoc_all_combined, pheno)
-# 3. figure 3 should be the simulation experiment
-    figure_3(res_ratio_df_100it, ad_snps)
+
 # TABLES
 # 1. extract demographics
     # AD
@@ -898,4 +992,4 @@
     write.table(ratios_annot, 'table_s3.txt', quote=F, row.names=F, sep="\t", dec=',')
 
 # WORKSPACE
-    save.image('20220929_workspace_final.RData')
+    save.image('20220930_workspace_final.RData')
