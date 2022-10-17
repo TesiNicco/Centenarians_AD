@@ -8,6 +8,7 @@
     library(parallel)
     library(ggplot2)
     library(ggpubr)
+    library(viridis)
     library(plyr)
     library(forestploter)
     library(grid)
@@ -210,7 +211,7 @@
             snp_locus = paste(str_split_fixed(s, ':', 4)[, 1], str_split_fixed(s, ':', 4)[, 2], sep = ':'); snp_locus = str_replace_all(snp_locus, 'chr', '')
             # take gwas associations
             gwas_beta = log(as.numeric(ad_snps$or[which(ad_snps$locus == snp_locus)]))
-            gwas_allele = str_split_fixed(ad_snps$"ea/oa"[which(ad_snps$locus == snp_locus)], '/', 2)[, 1]
+            gwas_allele = str_split_fixed(ad_snps$"minor/major"[which(ad_snps$locus == snp_locus)], '/', 2)[, 1]
             # gather my associations
             my_assoc = singleAssoc[which(singleAssoc$snp == s),]
             my_allele = unique(my_assoc$allele)
@@ -827,6 +828,9 @@
 
 # 8. single-variant associations (ctr vs chc -- ad vs chc -- ad vs ctr)
     singleAssoc = function_singleVar(dosages_pheno, pheno)
+    assoc_chc_ctr = singleAssoc[which(singleAssoc$test == 'ctr_vs_chc'),]
+    assoc_chc_ctr$p_adjust = p.adjust(assoc_chc_ctr$p, 'fdr')
+    assoc_chc_ctr[which(assoc_chc_ctr$p_adjust < 0.05),]
 
 # 9. effect size ratio
     ratios = effect_size_ratio(singleAssoc, ad_snps)
@@ -854,6 +858,13 @@
     checkAssociations(ratios_ad_ctr, ad_snps)
     # run analysis for ad_chc
     checkAssociations(ctr_chc_ratios, ad_snps)
+    # adjust pvalues
+    ratios_ad_chc$p_adjust = p.adjust(ratios_ad_chc$p, 'fdr')
+    ratios_ad_ctr$p_adjust = p.adjust(ratios_ad_ctr$p, 'fdr')
+    # compare ad-chc and ad-ctr effect-size change for new and known SNPs, and all
+    wilcox.test(x = ratios_ad_chc$ratio_beta, y = ratios_ad_ctr$ratio_beta)
+    wilcox.test(x = ratios_ad_chc$ratio_beta[which(ratios_ad_chc$new_known == 'new')], y = ratios_ad_ctr$ratio_beta[which(ratios_ad_ctr$new_known == 'new')])
+    wilcox.test(x = ratios_ad_chc$ratio_beta[which(ratios_ad_chc$new_known == 'known')], y = ratios_ad_ctr$ratio_beta[which(ratios_ad_ctr$new_known == 'known')])
 
 # 11. extract frequencies
     res_frequencies = extract_frequencies(ratios)
@@ -931,8 +942,8 @@
     pipi = pipi + facet_grid(cols = vars(Type), scales = 'free')    
     change_df = data.frame(gene = c(1,1,1), ratio = c(40, 37, 40), Type = c('Known SNP', 'Known SNP', 'New SNP in latest GWAS'), Description = rep('Centenarians value more', 3))
     labels_change = c(paste0('Mean ratio known SNP = ', round(mean(converged_all$ratio[which(converged_all$Type == 'Known SNP')]), 2)),
-        paste0('Mean ratio new SNP = ', round(mean(converged_all$ratio), 2)),
-        paste0('Mean ratio overall = ', round(mean(converged_all$ratio[which(converged_all$Type == 'New SNP in latest GWAS')]), 2)))
+                paste0('Mean ratio new SNP = ', round(mean(converged_all$ratio[which(converged_all$Type == 'New SNP in latest GWAS')]), 2)),
+                paste0('Mean ratio overall = ', round(mean(converged_all$ratio), 2)))
     pipi = pipi + geom_text(data = change_df, label = c(labels_change), hjust = 0)
     pdf('figure_3.pdf', width = 16, height = 9)
     pipi
@@ -949,6 +960,30 @@
         ylab('Number of Centenarians') + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_colour_viridis_d()
     pdf('figure_s2.pdf', height = 7, width = 9)
     pupu
+    dev.off()
+    # maybe a different plot?
+    # need again to re-structure data
+    tmp_df = data.frame()
+    tmp_df2 = data.frame()
+    index_order = 1
+    index_order2 = 1
+    for (i in 1:nrow(converged_all)){
+        tmp_df = rbind(tmp_df, data.frame(index = c(index_order, index_order+1), gene = rep(as.character(converged_all$gene[i]), 2), Description = rep(converged_all$Description[i], 2), Type = rep(converged_all$Type[i], 2), n = c(converged_all$n_chc[i], converged_all$n_ctr[i]), Label = c('Centenarians', 'Normal Controls')))
+        index_order = index_order + 2
+        tmp_df2 = rbind(tmp_df2, data.frame(index = index_order2, gene = converged_all$gene[i], n_chc = converged_all$n_chc[i], n_ctr = converged_all$n_ctr[i], Type = converged_all$Type[i], Description = converged_all$Description[i]))
+        index_order2 = index_order2 + 1
+    }
+    # plot 1
+    ggplot(tmp_df, aes(x = gene, y = n, color = Label)) + geom_point(size = 3) + xlab('') + ylab('Number of individuals') +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top')
+    # plot 2
+    plt = ggplot(tmp_df2, aes(x = gene)) + labs(x = "", y = "Number of individuals") + 
+        geom_segment(aes(x = gene, y = n_chc, xend = gene, yend = n_ctr), size = 1) + 
+        geom_point(aes(y = n_chc, color = "Centenarians"), size = 4, shape = 15) + geom_point(aes(y = n_ctr, color = "Normal Controls"), size = 4, shape = 15) +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + scale_color_viridis(discrete = T, option = "D", end = 0.75)
+    plt = plt + facet_grid(cols = vars(Type), scales = 'free')    
+    pdf('figure_3_alternative.pdf', height = 9, width = 16)
+    plt
     dev.off()
     # finally output the table
     write.table(res_all_combined_nosampl, 'table_s6.txt', quote = F, row.names = F, sep = "\t", dec = ',')
