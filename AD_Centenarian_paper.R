@@ -103,7 +103,7 @@
         children_ids = pheno_final_raw$ID_GWAS[grep('_F', pheno_final_raw$ID_100plus)]
         children = children[which(children$IID %in% children_ids),]
         # keep only samples that passed qc and add pcs
-        pcs = pheno[, c('ID_GWAS', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5')]
+        pcs = pheno[, c('ID_GWAS', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'sex')]
         prs = merge(prs, pcs, by.x = 'IID', by.y = 'ID_GWAS')
         # chc vs. controls
         tmp_prs = prs[which(prs$PHENO %in% c("Centenarian", "Control_100plus", "Control_LASA", "Control_other_twin", "Control_path", "SCD")),]
@@ -112,6 +112,19 @@
         res_chc_ctr = as.data.frame(t(summary(model_chc_ctr)$coefficients[2, ]))
         res_chc_ctr$comparison = 'chc_ctr'
         res_chc_ctr$N_cases = nrow(tmp_prs[which(tmp_prs$STATUS == 1),]); res_chc_ctr$N_ctr = nrow(tmp_prs[which(tmp_prs$STATUS == 0),])
+        # gender strat
+        # males
+        tmp_prs_males = tmp_prs[which(tmp_prs$sex == 'M'),]; tmp_prs_females = tmp_prs[which(tmp_prs$sex == 'F'),]
+        model_chc_ctr_males = glm(STATUS ~ PRS + PC1 + PC2 + PC3 + PC4 + PC5, data = tmp_prs_males, family = 'binomial')
+        res_chc_ctr_males = as.data.frame(t(summary(model_chc_ctr_males)$coefficients[2, ]))
+        res_chc_ctr_males$comparison = 'chc_ctr_males'
+        res_chc_ctr_males$N_cases = nrow(tmp_prs_males[which(tmp_prs_males$STATUS == 1),]); res_chc_ctr_males$N_ctr = nrow(tmp_prs_males[which(tmp_prs_males$STATUS == 0),])
+        # females
+        model_chc_ctr_females = glm(STATUS ~ PRS + PC1 + PC2 + PC3 + PC4 + PC5, data = tmp_prs_females, family = 'binomial')
+        res_chc_ctr_females = as.data.frame(t(summary(model_chc_ctr_females)$coefficients[2, ]))
+        res_chc_ctr_females$comparison = 'chc_ctr_females'
+        res_chc_ctr_females$N_cases = nrow(tmp_prs_females[which(tmp_prs_females$STATUS == 1),]); res_chc_ctr_females$N_ctr = nrow(tmp_prs_females[which(tmp_prs_females$STATUS == 0),])
+        
         # chc vs. ad
         tmp_prs = prs[which(prs$PHENO %in% c("Centenarian", "Probable_AD", "Possible_AD", "AD_path")),]
         tmp_prs$STATUS = 1; tmp_prs$STATUS[which(tmp_prs$PHENO == 'Centenarian')] = 0; print(table(tmp_prs$STATUS))
@@ -119,6 +132,19 @@
         res_chc_ad = as.data.frame(t(summary(model_chc_ad)$coefficients[2, ]))
         res_chc_ad$comparison = 'chc_ad'
         res_chc_ad$N_cases = nrow(tmp_prs[which(tmp_prs$STATUS == 1),]); res_chc_ad$N_ctr = nrow(tmp_prs[which(tmp_prs$STATUS == 0),])
+        # gender strat
+        # males
+        tmp_prs_males = tmp_prs[which(tmp_prs$sex == 'M'),]; tmp_prs_females = tmp_prs[which(tmp_prs$sex == 'F'),]
+        model_chc_ad_males = glm(STATUS ~ PRS + PC1 + PC2 + PC3 + PC4 + PC5, data = tmp_prs_males, family = 'binomial')
+        res_chc_ad_males = as.data.frame(t(summary(model_chc_ad_males)$coefficients[2, ]))
+        res_chc_ad_males$comparison = 'chc_ad_males'
+        res_chc_ad_males$N_cases = nrow(tmp_prs_males[which(tmp_prs_males$STATUS == 1),]); res_chc_ad_males$N_ctr = nrow(tmp_prs_males[which(tmp_prs_males$STATUS == 0),])
+        # females
+        model_chc_ad_females = glm(STATUS ~ PRS + PC1 + PC2 + PC3 + PC4 + PC5, data = tmp_prs_females, family = 'binomial')
+        res_chc_ad_females = as.data.frame(t(summary(model_chc_ad_females)$coefficients[2, ]))
+        res_chc_ad_females$comparison = 'chc_ad_females'
+        res_chc_ad_females$N_cases = nrow(tmp_prs_females[which(tmp_prs_females$STATUS == 1),]); res_chc_ad_females$N_ctr = nrow(tmp_prs_females[which(tmp_prs_females$STATUS == 0),])
+        
         # ad vs. ctr
         tmp_prs = prs[which(prs$PHENO %in% c("Control_LASA", "Control_other_twin", "Control_100plus", "Control_path", "SCD", "Probable_AD", "Possible_AD", "AD_path")),]
         tmp_prs$STATUS = 1; tmp_prs$STATUS[which(tmp_prs$PHENO %in% c("Control_100plus", "Control_LASA", "Control_other_twin", "Control_path", "SCD"))] = 0; print(table(tmp_prs$STATUS))
@@ -126,6 +152,19 @@
         res_ad_ctr = as.data.frame(t(summary(model_ad_ctr)$coefficients[2, ]))
         res_ad_ctr$comparison = 'ad_ctr'
         res_ad_ctr$N_cases = nrow(tmp_prs[which(tmp_prs$STATUS == 1),]); res_ad_ctr$N_ctr = nrow(tmp_prs[which(tmp_prs$STATUS == 0),])
+        # gender strat
+        # males
+        tmp_prs_males = tmp_prs[which(tmp_prs$sex == 'M'),]; tmp_prs_females = tmp_prs[which(tmp_prs$sex == 'F'),]
+        model_ad_ctr_males = glm(STATUS ~ PRS + PC1 + PC2 + PC3 + PC4 + PC5, data = tmp_prs_males, family = 'binomial')
+        res_ad_ctr_males = as.data.frame(t(summary(model_ad_ctr_males)$coefficients[2, ]))
+        res_ad_ctr_males$comparison = 'ad_ctr_males'
+        res_ad_ctr_males$N_cases = nrow(tmp_prs_males[which(tmp_prs_males$STATUS == 1),]); res_ad_ctr_males$N_ctr = nrow(tmp_prs_males[which(tmp_prs_males$STATUS == 0),])
+        # females
+        model_ad_ctr_females = glm(STATUS ~ PRS + PC1 + PC2 + PC3 + PC4 + PC5, data = tmp_prs_females, family = 'binomial')
+        res_ad_ctr_females = as.data.frame(t(summary(model_ad_ctr_females)$coefficients[2, ]))
+        res_ad_ctr_females$comparison = 'ad_ctr_females'
+        res_ad_ctr_females$N_cases = nrow(tmp_prs_females[which(tmp_prs_females$STATUS == 1),]); res_ad_ctr_females$N_ctr = nrow(tmp_prs_females[which(tmp_prs_females$STATUS == 0),])
+
         # finally children vs. their partners
         children$STATUS = 0
         # what if we compare children with the controls
@@ -152,7 +191,9 @@
         res_children$N_cases = nrow(children_clean[which(children_clean$STATUS == 1),]); res_children$N_ctr = nrow(children_clean[which(children_clean$STATUS == 0),])
         # put results together
         results = rbind(res_chc_ad, res_ad_ctr, res_chc_ctr, res_children)
-        return(results)
+        gender_strat = list(res_chc_ad_females, res_chc_ad_males, res_ad_ctr_females, res_ad_ctr_males, res_chc_ctr_females, res_chc_ctr_males)
+        all_res = list(results, gender_strat)
+        return(all_res)
     }
 
     # generic function to run single-variant association tests
@@ -282,7 +323,7 @@
         tmp = str_split_fixed(snps_interest, ':', 4)
         df = data.frame(snpid = snps_interest, chrom = tmp[, 1], position = tmp[, 2])
         # also need to write samples to look at
-        pheno <- read.table("/project/holstegelab/Share/gwas_array/mapping_files/20211027_phenotypes_ADC_samplesKept.txt", h=T)
+        pheno <- read.table("path/to/QC/GWAS/samples_kept.txt", h=T)
         chc = pheno[which(pheno$diagnosis == 'Centenarian'),]
         ctr = pheno[which(pheno$diagnosis %in% c("Control_100plus", "Control_LASA", "Control_other", "Control_other_twin", "Control_path", "SCD")),]
         ad = pheno[which(pheno$diagnosis %in% c("Probable_AD", "Possible_AD", "AD_path")),]
@@ -298,13 +339,15 @@
             cmd = system(paste0("plink2 --pfile ", data_path, '/', chr, '.dose.unscrambled --keep chc_samples.txt --extract ', chr, '_snps.txt --freq --out ', chr, '_freq_chc'))
             cmd = system(paste0("plink2 --pfile ", data_path, '/', chr, '.dose.unscrambled --keep ad_samples.txt --extract ', chr, '_snps.txt --freq --out ', chr, '_freq_ad'))
             cmd = system(paste0("plink2 --pfile ", data_path, '/', chr, '.dose.unscrambled --keep ctr_samples.txt --extract ', chr, '_snps.txt --freq --out ', chr, '_freq_ctr'))
+            cmd = system(paste0("plink2 --pfile ", data_path, '/', chr, '.dose.unscrambled --keep children_samples.txt --extract ', chr, '_snps.txt --freq --out ', chr, '_freq_off'))
             # read frequencies back in
             chc_freq = fread(paste0(chr, '_freq_chc.afreq'), h=T)
             ctr_freq = fread(paste0(chr, '_freq_ctr.afreq'), h=T)
             ad_freq = fread(paste0(chr, '_freq_ad.afreq'), h=T)
+            off_freq = fread(paste0(chr, '_freq_off.afreq'), h=T)
             # combine frequencies
-            df_freq = data.frame(snpid = chc_freq$ID, ref = chc_freq$REF, alt = chc_freq$ALT, n_allele_chc = chc_freq$OBS_CT, n_allele_ctr = ctr_freq$OBS_CT, n_allele_ad = ad_freq$OBS_CT, freq_chc = chc_freq$ALT_FREQS, freq_ctr = ctr_freq$ALT_FREQS, freq_ad = ad_freq$ALT_FREQS)
-            df_freq_plot = rbind(chc_freq, ctr_freq, ad_freq); df_freq_plot$Phenotype = c(rep('CHC', nrow(chc_freq)), rep('CTR', nrow(ctr_freq)), rep('AD', nrow(ad_freq)))
+            df_freq = data.frame(snpid = chc_freq$ID, ref = chc_freq$REF, alt = chc_freq$ALT, n_allele_chc = chc_freq$OBS_CT, n_allele_ctr = ctr_freq$OBS_CT, n_allele_ad = ad_freq$OBS_CT, n_allele_off = off_freq$OBS_CT, freq_chc = chc_freq$ALT_FREQS, freq_ctr = ctr_freq$ALT_FREQS, freq_ad = ad_freq$ALT_FREQS, freq_off = off_freq$ALT_FREQS)
+            df_freq_plot = rbind(chc_freq, ctr_freq, ad_freq, off_freq); df_freq_plot$Phenotype = c(rep('CHC', nrow(chc_freq)), rep('CTR', nrow(ctr_freq)), rep('AD', nrow(ad_freq)), rep('OFF', nrow(off_freq)))
             # save
             all_frequencies[[(length(all_frequencies) + 1)]] = df_freq
             all_frequencies_plot[[(length(all_frequencies_plot) + 1)]] = df_freq_plot
@@ -317,6 +360,71 @@
         all_frequencies_plot$locus = paste0(tmp2[, 1], ':', tmp2[, 2]); all_frequencies_plot$locus = str_replace_all(all_frequencies_plot$locus, 'chr', '')
         res = list(all_frequencies, all_frequencies_plot)
         return(res)
+    }
+
+    # function to extract frequencies for the maf plot
+    extract_counts <- function(ratios){
+        snps_interest = str_split_fixed(unique(ratios$snp), '_', 2)[, 1]
+        tmp = str_split_fixed(snps_interest, ':', 4)
+        df = data.frame(snpid = snps_interest, chrom = tmp[, 1], position = tmp[, 2])
+        # main loop to calculate allele counts
+        all_counts = list()
+        all_counts_plot = list()
+        for (chr in unique(df$chrom)){
+            tmp_snps = df[which(df$chrom == chr),]
+            write.table(tmp_snps$snpid, paste0(chr, '_snps.txt'), quote=F, row.names=F, col.names=F)
+            cmd = system(paste0("plink2 --pfile ", data_path, '/', chr, '.dose.unscrambled --keep chc_samples.txt --extract ', chr, '_snps.txt --freq counts --out ', chr, '_freq_chc'))
+            cmd = system(paste0("plink2 --pfile ", data_path, '/', chr, '.dose.unscrambled --keep ad_samples.txt --extract ', chr, '_snps.txt --freq counts --out ', chr, '_freq_ad'))
+            cmd = system(paste0("plink2 --pfile ", data_path, '/', chr, '.dose.unscrambled --keep ctr_samples.txt --extract ', chr, '_snps.txt --freq counts --out ', chr, '_freq_ctr'))
+            cmd = system(paste0("plink2 --pfile ", data_path, '/', chr, '.dose.unscrambled --keep children_samples.txt --extract ', chr, '_snps.txt --freq counts --out ', chr, '_freq_off'))
+            # read frequencies back in
+            chc_freq = fread(paste0(chr, '_freq_chc.acount'), h=T)
+            ctr_freq = fread(paste0(chr, '_freq_ctr.acount'), h=T)
+            ad_freq = fread(paste0(chr, '_freq_ad.acount'), h=T)
+            off_freq = fread(paste0(chr, '_freq_off.acount'), h=T)
+            # combine frequencies
+            df_freq = data.frame(snpid = chc_freq$ID, ref = chc_freq$REF, alt = chc_freq$ALT, n_allele_chc = chc_freq$OBS_CT, n_allele_ctr = ctr_freq$OBS_CT, n_allele_ad = ad_freq$OBS_CT, n_allele_off = off_freq$OBS_CT, alt_count_chc = chc_freq$ALT_CTS, alt_count_ctr = ctr_freq$ALT_CTS, alt_count_ad = ad_freq$ALT_CTS, alt_count_off = off_freq$ALT_CTS)
+            df_freq_plot = rbind(chc_freq, ctr_freq, ad_freq, off_freq); df_freq_plot$Phenotype = c(rep('CHC', nrow(chc_freq)), rep('CTR', nrow(ctr_freq)), rep('AD', nrow(ad_freq)), rep('OFF', nrow(off_freq)))
+            # save
+            all_counts[[(length(all_counts) + 1)]] = df_freq
+            all_counts_plot[[(length(all_counts_plot) + 1)]] = df_freq_plot
+        }
+        all_counts = rbindlist(all_counts)
+        tmp = str_split_fixed(all_counts$snpid, ':', 4)
+        all_counts$locus = paste0(tmp[, 1], ':', tmp[, 2]); all_counts$locus = str_replace_all(all_counts$locus, 'chr', '')
+        all_counts_plot = rbindlist(all_counts_plot)
+        tmp2 = str_split_fixed(all_counts_plot$ID, ':', 4)
+        all_counts_plot$locus = paste0(tmp2[, 1], ':', tmp2[, 2]); all_counts_plot$locus = str_replace_all(all_counts_plot$locus, 'chr', '')
+        res = list(all_counts, all_counts_plot)
+        return(res)
+    }
+
+    # function to extract hardcalls plot
+    count_prot_dosages <- function(dosages_pheno, samples, ad_snps_info){
+        # samples = 'chc_samples.txt'
+        tmp_samples = fread(samples, h=F)
+        tmp_dos = dosages_pheno[which(dosages_pheno$IID %in% tmp_samples$V1),]
+        for (c in 1:ncol(tmp_dos)){
+            if (length(grep('chr', colnames(tmp_dos)[c])) >0){
+                tested_all = str_split_fixed(colnames(tmp_dos)[c], '_', 2)[, 2]
+                locus_snp = paste(str_split_fixed(str_split_fixed(colnames(tmp_dos)[c], '_', 2)[, 1], ':', 4)[, 1:2], collapse=':')
+                if (tested_all != ad_snps_info$prot_allele[which(ad_snps_info$locus == locus_snp)]){
+                    tmp_dos[, c] = 2 - tmp_dos[, ..c]
+                }
+            }
+        }
+        # keep only snps
+        snps_index = grep('chr', colnames(tmp_dos))
+        tmp_dos = tmp_dos[, ..snps_index]
+        # count the total number of variants in which there's at least 1 protective allele
+        count <- apply(tmp_dos > 0.5, 1, sum)
+        # count the total number of variants in which there're 2 protective alleles
+        count_homo <- apply(tmp_dos > 1.5, 1, sum)
+        # also add sum of number of protective alleles
+        tmp_dos$sum_protective = rowSums(tmp_dos)
+        tmp_dos$n_variants_with_protective = count
+        tmp_dos$n_homo_protective = count_homo
+        return(tmp_dos)
     }
 
     # function to draw figure 1 -- 3 plots: maf, effect-size and ratio
@@ -350,6 +458,7 @@
         data_plot$Comparison = 'Not different'; data_plot$Comparison[which(data_plot$two_tail_p <= 0.05)] = 'Different from published'
         data_plot$adj_p = p.adjust(data_plot$p, 'fdr')
         # fix gene names
+        data_plot$gene[which(data_plot$gene == 'SLC24A4')] = 'RIN3'
         data_plot$gene[duplicated(data_plot$gene)] = paste0(data_plot$gene[duplicated(data_plot$gene)], ' (2)')
         # fix label colors
         lab_color = data.frame(gene = as.character(), col = as.character(), locus = as.character())
@@ -359,7 +468,9 @@
         # also get snps
         snplist = unique(data_plot$locus[order(data_plot$ratio_beta)])
         # set up grid for the plot
-        pdf('figure1_newCentenarians.pdf', height = 12, width = 17)
+        pdf('Downloads/figure1_newCentenarians.pdf', height = 12, width = 18)
+        sysfonts::font_add("Geneva", "/User/nicco/Desktop/Geneva.ttf")
+        showtext::showtext_auto()
         par(mfrow=c(2, 1), family = 'Geneva')
         # plot 1 is the frequency plot
         par(mar = c(0, 6, 8, 3))
@@ -383,7 +494,7 @@
             rect(xleft = plot_pos[counter] - wid, ybottom = 0.5, xright = plot_pos[counter] + wid, ytop = 0.525, col = square_col, xpd=T)
             counter = counter +1
         }
-        legend(x = plot_pos[1], y = 0.7, legend = c('AD cases', 'Normal controls', 'Healthy centenarians'), pch = c(16, 15, 17), col = c('red', 'deepskyblue3', 'darkolivegreen4'), bty = 'n', xpd=T, ncol = 3, cex = 1.50)
+        legend(x = plot_pos[1], y = 0.7, legend = c('AD cases', 'Age-matched controls', 'Cognitively Healthy Centenarians'), pch = c(16, 15, 17), col = c('red', 'deepskyblue3', 'darkolivegreen4'), bty = 'n', xpd=T, ncol = 3, cex = 1.50)
         legend(x = plot_pos[1], y = 0.65, legend = c('Protective allele', 'Risk allele'), pch = c(15, 0), col = c('black', 'black'), bty = 'n', xpd=T, ncol = 2, cex = 1.5)
         legend(x = plot_pos[1], y = 0.6, legend = c('Different from published', 'Not different'), pch = c(15, 15), col = c(color_palette[1], color_palette[2]), bty = 'n', xpd=T, ncol = 2, cex = 1.5)
         segments(x0 = 0, y0 = -0.02, x1 = max(plot_pos), y1 = -0.02, lwd=1.5, col='grey10')
@@ -426,60 +537,6 @@
         dev.off()
     }
 
-    # function to draw figure S1
-    plot_figure_S1 <- function(singleAssoc, ratios, data_path, ad_snps){
-        # create right order for the snps
-            tmp = ratios[which(ratios$test == 'ad_vs_ctr')]
-            tmp$ratio_beta = tmp$beta_aligned / tmp$gwas_beta; tmp = tmp[order(tmp$ratio_beta),]; 
-            tmp$gene[which(duplicated(tmp$gene) == TRUE)] = paste0(tmp$gene[which(duplicated(tmp$gene) == TRUE)], ' (2)')
-            tmp$gene = factor(tmp$gene, levels = tmp$gene)
-            ad_snps_new_info = ad_snps[, c('locus', 'new_known')]
-            tmp = merge(tmp, ad_snps_new_info, by = 'locus')
-        # plot 1 is the grouped barplot with effect-sizes
-            # prepare data for grouped barplot
-            grp_plot = list()
-            for (i in 1:nrow(tmp)){ grp_plot[[(length(grp_plot) + 1)]] = data.frame(Gene = rep(tmp$gene[i], 2), Effect = c(tmp$gwas_beta[i], tmp$beta_aligned[i]), Study = c('GWAS', 'AD cases vs. Centenarians'), low = c(tmp$gwas_beta[i] - (1.96*tmp$se_gwas[i]), tmp$beta_aligned[i] - (1.96*tmp$se[i])), up = c(tmp$gwas_beta[i] + (1.96*tmp$se_gwas[i]), tmp$beta_aligned[i] + (1.96*tmp$se[i]))) }
-            grp_plot = rbindlist(grp_plot)
-            # add labels for new of known snp
-            new_snps = all_freqs_plot$gene[which(all_freqs_plot$new_known == 'new')]
-            grp_plot$label = ifelse(grp_plot$Gene %in% new_snps, 'New SNP in latest GWAS', 'Known SNP')
-            # plot
-            plt_grp = ggplot(grp_plot, aes(fill=Study, y=Effect, x=Gene)) + geom_bar(position="dodge", stat="identity") + coord_cartesian(ylim = c(-1, 1), clip = "on") + xlab("") + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + geom_errorbar(aes(ymin = low, ymax = up), width = 0.2, color = 'grey60', position=position_dodge(.9)) + ylim(-1, 1)
-            plt_grp = plt_grp + facet_grid(cols = vars(label), drop = FALSE, scales = "free")
-        # plot 3 is the effect-size ratio
-            tmp$Comparison_symbol = ''; tmp$Comparison_symbol[which(tmp$two_tail_p <= 0.05)] = 'x'
-            tmp$Comparison = 'Not different'; tmp$Comparison[which(tmp$two_tail_p <= 0.05)] = 'Different from published'
-            tmp$adj_p = p.adjust(tmp$p, 'fdr')
-            # add labels for new of known snp
-            tmp$label = ifelse(tmp$gene %in% new_snps, 'New SNP in latest GWAS', 'Known SNP')
-            # find significant associations to be annotated
-            star_df = data.frame(x = tmp$gene[which(tmp$p <= 0.05)], y = tmp$up_ci_ratio[which(tmp$p <= 0.05)], comparison = tmp$Comparison[which(tmp$p <= 0.05)], label = tmp$label[which(tmp$p <= 0.05)])
-            fdr_df = data.frame(x = tmp$gene[which(tmp$adj_p <= 0.05)], y = tmp$up_ci_ratio[which(tmp$adj_p <= 0.05)], comparison = tmp$Comparison[which(tmp$adj_p <= 0.05)], label = tmp$label[which(tmp$adj_p <= 0.05)])
-            #tmp$ratio_beta[which(tmp$gene == 'TREML2')] = NA; tmp$low_ci_ratio[which(tmp$gene == 'TREML2')] = NA; tmp$up_ci_ratio[which(tmp$gene == 'TREML2')] = NA
-            # the actual plot
-            plt_ratio = ggplot(tmp, aes(x = gene, y = ratio_beta, fill = Comparison)) + geom_bar(stat = 'identity') + geom_errorbar(aes(ymin = low_ci_ratio, ymax = up_ci_ratio), width = 0.4, color = 'grey60') + geom_hline(yintercept = 1, linetype = 'dashed', col = 'red') +
-                theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + xlab('') + ylab('Effect-size Ratio')
-            plt_ratio = plt_ratio + facet_grid(cols = vars(label), drop = FALSE, scales = "free")
-            # annotation of significant associations
-            ann_sign_assoc = data.frame(gene = star_df$x, ratio_beta = star_df$y, Comparison = star_df$comparison, label = star_df$label)
-            plt_ratio = plt_ratio + geom_text(data = ann_sign_assoc, label = '*')
-            # annotation of fdr significant associations
-            ann_fdr_assoc = data.frame(gene = fdr_df$x, ratio_beta = fdr_df$y, Comparison = fdr_df$comparison, label = fdr_df$label)
-            plt_ratio = plt_ratio + geom_text(data = ann_fdr_assoc, label = '**', vjust = -1.5)
-            # annotation of mean change
-            change_df = data.frame(gene = c(1,1,1), ratio_beta = c(15, 15, 13), Comparison = rep('Not different', 3), label = c('Known SNP', 'New SNP in latest GWAS', 'Known SNP'))
-            labels_change = c(paste0('Median ratio known SNP = ', round(median(tmp$ratio_beta[(!(is.na(tmp$ratio_beta))) & tmp$label == 'Known SNP']), 2)),
-                paste0('Median ratio new SNP = ', round(median(tmp$ratio_beta[(!(is.na(tmp$ratio_beta))) & tmp$label != 'Known SNP']), 2)),
-                paste0('Median ratio overall = ', round(median(tmp$ratio_beta[(!(is.na(tmp$ratio_beta)))]), 2)))
-            plt_ratio = plt_ratio + geom_text(data = change_df, label = labels_change, hjust = 0)
-        # manually combine the plots together
-        combined_plot = ggarrange(plotlist = list(plt_grp, plt_ratio), nrow = 2, ncol = 1, labels = "AUTO")
-        pdf('figure_s1.pdf', height = 12, width = 16)
-        combined_plot
-        dev.off()
-        return('** plot is done!')
-    }
-
     # function to draw figure 2 along with the forest plot of associations
     figure_2 <- function(prs_allSNPs, prs_allSNPs_noAPOE, assoc_all_combined, pheno){
         # densities
@@ -490,27 +547,32 @@
         tmp = tmp[which(tmp$IID %in% pheno$ID_GWAS),]
         tmp_noAPOE = tmp_noAPOE[which(tmp_noAPOE$IID %in% pheno$ID_GWAS),]
         # manage children to keep
-        children_tokeep = prs_allSNPs[which(prs_allSNPs$PHENO == 'family_100plus'),]
-        children_tokeep_noAPOE = prs_allSNPs_noAPOE[which(prs_allSNPs_noAPOE$PHENO == 'family_100plus'),]
+        #children_tokeep = prs_allSNPs[which(prs_allSNPs$PHENO == 'family_100plus'),]
+        #children_tokeep_noAPOE = prs_allSNPs_noAPOE[which(prs_allSNPs_noAPOE$PHENO == 'family_100plus'),]
         # add children to other samples
-        tmp = rbind(tmp, children_tokeep); tmp_noAPOE = rbind(tmp_noAPOE, children_tokeep_noAPOE)
+        #tmp = rbind(tmp, children_tokeep); tmp_noAPOE = rbind(tmp_noAPOE, children_tokeep_noAPOE)
         # add a label for centenarians, controls and AD
         tmp$Class = 'AD cases'; tmp$Class[which(tmp$PHENO == 'Centenarian')] = 'Centenarians'; tmp$Class[which(tmp$PHENO %in% c("Control_100plus", "Control_LASA", "Control_other_twin", "Control_path", "SCD"))] = 'Controls';
-        tmp$Class[which(tmp$PHENO == 'family_100plus')] = 'Children'
+        #tmp$Class[which(tmp$PHENO == 'family_100plus')] = 'Offspring'
         tmp_noAPOE$Class = 'AD cases'; tmp_noAPOE$Class[which(tmp_noAPOE$PHENO == 'Centenarian')] = 'Centenarians'; tmp_noAPOE$Class[which(tmp_noAPOE$PHENO %in% c("Control_100plus", "Control_LASA", "Control_other_twin", "Control_path", "SCD"))] = 'Controls'
-        tmp_noAPOE$Class[which(tmp_noAPOE$PHENO == 'family_100plus')] = 'Children'
-        tmp$Linetype = factor(ifelse(tmp$Class != 'Children', "1", "2"))
-        tmp_noAPOE$Linetype = factor(ifelse(tmp_noAPOE$Class != 'Children', "1", "2"))
+        #tmp_noAPOE$Class[which(tmp_noAPOE$PHENO == 'family_100plus')] = 'Offspring'
+        tmp$Linetype = factor(ifelse(tmp$Class != 'Offspring', "1", "2"))
+        tmp_noAPOE$Linetype = factor(ifelse(tmp_noAPOE$Class != 'Offspring', "1", "2"))
+        # modify class name
+        tmp$Class[which(tmp$Class == 'Controls')] = 'Age-matched controls'
+        tmp$Class[which(tmp$Class == 'Centenarians')] = 'Cognitively Healthy Centenarians'
+        tmp_noAPOE$Class[which(tmp_noAPOE$Class == 'Controls')] = 'Age-matched controls'
+        tmp_noAPOE$Class[which(tmp_noAPOE$Class == 'Centenarians')] = 'Cognitively Healthy Centenarians'
         # plot
-        density1 = ggplot(tmp, aes(x = PRS, fill = Class)) + geom_density(aes(linetype=Linetype, color = Class), size = 1) + ylab('Density') + ggtitle('PRS including APOE SNPs') + scale_fill_manual(values=c(alpha("red", 0.5), alpha("darkolivegreen3", 0.5), alpha("grey", 0), alpha('deepskyblue2', 0.5))) + scale_linetype_manual(values=c("solid", "dotted"), guide = "none") + theme_minimal() + theme(text = element_text(family = "Geneva"))
-        density2 = ggplot(tmp_noAPOE, aes(x = PRS, fill = Class)) + geom_density(aes(linetype=Linetype, color = Class), size = 1) + ylab('Density') + ggtitle('PRS excluding APOE SNPs') + scale_fill_manual(values=c(alpha("red", 0.5), alpha("darkolivegreen3", 0.5), alpha("grey", 0), alpha('deepskyblue2', 0.5))) + scale_linetype_manual(values=c("solid", "dotted"), guide = "none") + theme_minimal() + theme(text = element_text(family = "Geneva"))
+        density1 = ggplot(tmp, aes(x = PRS, fill = Class)) + geom_density(aes(linetype=Linetype, color = Class), size = 1) + ylab('Density') + ggtitle('PRS including APOE SNPs') + scale_fill_manual(values=c(alpha("red", 0.5), alpha("darkolivegreen3", 0.5), alpha('deepskyblue2', 0.5))) + scale_linetype_manual(values=c("solid"), guide = "none") + scale_color_manual(values = c("red", "darkolivegreen3", "deepskyblue2")) +  theme_minimal() + theme(text = element_text(family = "Geneva"))
+        density2 = ggplot(tmp_noAPOE, aes(x = PRS, fill = Class)) + geom_density(aes(linetype=Linetype, color = Class), size = 1) + ylab('Density') + ggtitle('PRS excluding APOE SNPs') + scale_fill_manual(values=c(alpha("red", 0.5), alpha("darkolivegreen3", 0.5), alpha('deepskyblue2', 0.5))) + scale_linetype_manual(values=c("solid"), guide = "none") + scale_color_manual(values = c("red", "darkolivegreen3", "deepskyblue2", "black")) + theme_minimal() + theme(text = element_text(family = "Geneva"))
         # combine plots
         combined = ggarrange(plotlist = list(density1, density2), nrow = 1, ncol = 2, common.legend = TRUE, labels = "AUTO")
   
         # forest plot
         # reformat data
-        tmp_apoe = assoc_all_combined[which(assoc_all_combined$label == 'apoe_included' & assoc_all_combined$N_ctr > 108),]
-        tmp_noapoe = assoc_all_combined[which(assoc_all_combined$label == 'apoe_excluded' & assoc_all_combined$N_ctr > 108),]
+        tmp_apoe = assoc_all_combined[which(assoc_all_combined$label == 'apoe_included' & assoc_all_combined$comparison != 'children_vs_ctr'),]
+        tmp_noapoe = assoc_all_combined[which(assoc_all_combined$label == 'apoe_excluded' & assoc_all_combined$comparison != 'children_vs_ctr'),]
         # reorder data with title rows
         tmp_apoe_info = data.frame(comparison = 'All SNPs including APOE (N=86)', N_cases = "", N_ctr = "")
         tmp_noapoe_info = data.frame(comparison = 'All SNPs excluding APOE (N=84)', N_cases = "", N_ctr = "")
@@ -525,15 +587,21 @@
         tmp_forplot$"OR (95% CI)" = paste0(round(tmp_forplot$OR, 2), ' (', round(tmp_forplot$lowCI, 2), ' to ', round(tmp_forplot$upCI, 2), ')')
         tmp_forplot$"OR (95% CI)"[which(tmp_forplot$"OR (95% CI)" == 'NA (NA to NA)')] = ""
         # adjust labels
-        tmp_forplot$Comparison[which(tmp_forplot$Comparison == 'ad_ctr')] = 'AD vs. Controls'
-        tmp_forplot$Comparison[which(tmp_forplot$Comparison == 'chc_ad')] = 'AD vs. Centenarians'
-        tmp_forplot$Comparison[which(tmp_forplot$Comparison == 'chc_ctr')] = 'Controls vs. Centenarians'
-        tmp_forplot$Comparison[which(tmp_forplot$Comparison == 'children_vs_ctr')] = 'Controls vs. Children'
+        tmp_forplot$Comparison[which(tmp_forplot$Comparison == 'ad_ctr')] = 'AD cases vs. Age-matched controls'
+        tmp_forplot$Comparison[which(tmp_forplot$Comparison == 'chc_ad')] = 'AD cases vs. Cognitively Healthy Centenarians      '
+        tmp_forplot$Comparison[which(tmp_forplot$Comparison == 'chc_ctr')] = 'Age-matched controls vs. Cognitively Healthy Centenarians        '
+        #tmp_forplot$Comparison[which(tmp_forplot$Comparison == 'children_vs_ctr')] = 'Controls vs. Offspring'
         # adjust pvalues
         tmp_forplot$"P (FDR)" = signif(as.numeric(tmp_forplot$"P (FDR)"), digits = 3)
         tmp_forplot$"P (FDR)"[is.na(tmp_forplot$"P (FDR)")] = ""
+        # add indentations
+        tmp_forplot$Comparison = ifelse(tmp_forplot$Comparison %in% c('All SNPs including APOE (N=86)', 'All SNPs excluding APOE (N=84)'), tmp_forplot$Comparison, paste0('    ', tmp_forplot$Comparison))
+        tmp_forplot$`OR (95% CI)` = paste0('    ', tmp_forplot$`OR (95% CI)`)
         # plot
-        tm = forest_theme(base_size = 10, base_family = "Geneva",
+        tm = forest_theme(base_size = 13, base_family = "Geneva",
+                    # text justification
+                    core=list(fg_params=list(hjust = c(0), x=c(0))),
+                    colhead=list(fg_params=list(hjust=c(0, -2, -2, 0.5, 0.55, 0.2), x=c(0, -2, -2, 0.5, 0.55, 0.2))),
                     # Confidence interval point shape, line type/color/width
                     ci_pch = 16,
                     ci_col = c('navy'),
@@ -551,10 +619,13 @@
                     # Change summary color for filling and borders
                     summary_fill = "#4575b4",
                     summary_col = "#4575b4")
-        forestplot = forest(tmp_forplot[, c(1:3, 9:10, 8)], est = tmp_forplot$OR, lower = tmp_forplot$lowCI, upper = tmp_forplot$upCI, sizes = 1, ref_line = 1, ci_column = 4, arrow_lab = c('', 'AD Risk'), xlim = c(0, 6), ticks_at = c(0, 2, 4, 6), theme = tm)
+        forestplot = forest(tmp_forplot[, c(1:3, 9:10, 8)], est = tmp_forplot$OR, lower = tmp_forplot$lowCI, upper = tmp_forplot$upCI, sizes = 1, ref_line = 1, ci_column = 4, xlab='Odds Ratio on AD', arrow_length = 0, xlim = c(0, 6), ticks_at = c(0, 2, 4, 6), theme = tm)
+        forestplot
         # combine with densities and make plot
         combined2 = ggarrange(plotlist=list(combined, forestplot), nrow = 2, ncol = 1, labels = c('', 'C'), heights = c(0.50, 0.50))
-        pdf('figure2_newCentenarians.pdf', height = 10, width = 16)
+        pdf('Downloads/figure2_newCentenarians_last.pdf', height = 10, width = 16)
+        font_add("Geneva", "/User/nicco/Desktop/Geneva.ttf")
+        showtext_auto()
         combined2
         dev.off()
         return('plot is done!')
@@ -562,48 +633,52 @@
 
     # function to draw figure 3
     figure_3 = function(res_all_combined_nosampl, ad_snps){
+        color_palette = brewer.pal(4, 'Paired')
         # add new/known
         info = ad_snps[, c('locus', 'new_known')]
         info$locus = str_replace_all(info$locus, 'chr', '')
         res_all_combined_nosampl = merge(res_all_combined_nosampl, info, by='locus')
         # change names
-        res_all_combined_nosampl$Description[which(res_all_combined_nosampl$Description == 'Centenarians value less')] = 'Centenarians value less than Age-matched controls'
-        res_all_combined_nosampl$Description[which(res_all_combined_nosampl$Description == 'Centenarians value more')] = 'Centenarians value more than Age-matched controls'
-        res_all_combined_nosampl$Description[which(res_all_combined_nosampl$Description == 'Same value (did not converge)')] = 'Same value'
+        res_all_combined_nosampl$Description[which(res_all_combined_nosampl$Description == 'Centenarians value less than Age-matched controls')] = 'Cognitively Healthy Centenarians value less than Age-matched controls'
+        res_all_combined_nosampl$Description[which(res_all_combined_nosampl$Description == 'Centenarians value more than Age-matched controls')] = 'Cognitively Healthy Centenarians value more than Age-matched controls'
+        res_all_combined_nosampl$Description[which(res_all_combined_nosampl$Description == 'Same value (did not converge)')] = 'Did not converge'
+        res_all_combined_nosampl$Description[which(res_all_combined_nosampl$Description == 'Did not converge' & res_all_combined_nosampl$converged_info == 'both')] = 'Same value'
         # sort
         res_all_combined_nosampl = res_all_combined_nosampl[order(res_all_combined_nosampl$ratio),]
         # plot pos
         pos = as.numeric(barplot(res_all_combined_nosampl$ratio))
         # background plot
-        pdf('figure_3_centenarians.pdf', height = 8, width = 16)
+        pdf('Downloads/figure_3_centenarians.pdf', height = 8, width = 16)
         # first figure is the actual number of cases and controls
         par(mfrow=c(1,2), mar=c(6, 6, 5, 0), family = 'Geneva')
-        plot(res_all_combined_nosampl$n_chc, res_all_combined_nosampl$n_ctr, bty = 'n', ylab='Controls to reach 80% power', xlab='Centenarians to reach 80% power', pch = 16, col = 'white', cex.lab = 1.50, xaxt='none', yaxt='none')
+        plot(res_all_combined_nosampl$n_chc, res_all_combined_nosampl$n_ctr, bty = 'n', ylab='Age-matched controls to reach 80% power', xlab='Cognitively Healthy Centenarians to reach 80% power', pch = 16, col = 'white', cex.lab = 1.50, xaxt='none', yaxt='none')
         # axes
         ticks = c(100, 500, 1000, 2500, 5000, 7500, 10000, 13000, 16000)
-        axis(side=1, at=ticks, labels=rep("", length(ticks)), cex=1)
-        for (x in ticks){ text(x = x, y = -700, adj = c(1, 1), labels = x, xpd=T, srt=45, cex=0.60) }
-        axis(side=2, at=ticks, labels=rep("", length(ticks)), cex=1)
-        for (x in ticks){ text(x = -700, y = x, adj = c(1, 0.5), labels = x, xpd=T, cex= 0.60) }
+        axis(side=1, at=ticks, labels=rep("", length(ticks)), cex=1.25)
+        for (x in ticks){ text(x = x, y = -700, adj = c(1, 1), labels = x, xpd=T, srt=45, cex=0.80) }
+        axis(side=2, at=ticks, labels=rep("", length(ticks)), cex=1.25)
+        for (x in ticks){ text(x = -700, y = x, adj = c(1, 0.5), labels = x, xpd=T, cex= 0.80) }
         # grid
         for (x in seq(0, 16000, length.out=10)){ abline(v = x, lwd=0.25, col='grey80') }
         for (y in seq(0, 16000, length.out=10)){ abline(h = y, lwd=0.25, col='grey80') }
         # diagnoal line
         abline(a=0, b=1, lty = 2, col='red', lwd=1.5)
         # points
-        chc_more = res_all_combined_nosampl[which(res_all_combined_nosampl$Description == 'Centenarians value more than Age-matched controls'),]
-        points(chc_more$n_chc, chc_more$n_ctr, pch = 16, col = alpha(viridis(3)[2], 0.6), cex=2.25)
-        chc_less = res_all_combined_nosampl[which(res_all_combined_nosampl$Description == 'Centenarians value less than Age-matched controls'),]
-        points(chc_less$n_chc, chc_less$n_ctr, pch = 16, col = alpha(viridis(3)[1], 0.6), cex=2.25)
+        chc_more = res_all_combined_nosampl[which(res_all_combined_nosampl$Description == 'Cognitively Healthy Centenarians value more than Age-matched controls'),]
+        points(chc_more$n_chc, chc_more$n_ctr, pch = 16, col = alpha(color_palette[1], 0.75), cex=2.25)
+        chc_less = res_all_combined_nosampl[which(res_all_combined_nosampl$Description == 'Cognitively Healthy Centenarians value less than Age-matched controls'),]
+        points(chc_less$n_chc, chc_less$n_ctr, pch = 16, col = alpha(color_palette[2], 0.75), cex=2.25)
         same = res_all_combined_nosampl[which(res_all_combined_nosampl$Description == 'Same value'),]
-        points(same$n_chc, same$n_ctr, pch = 16, col = alpha(viridis(3)[3], 0.6), cex=2.25)
+        points(same$n_chc, same$n_ctr, pch = 16, col = alpha(color_palette[3], 0.75), cex=2.25)
+        nonconv = res_all_combined_nosampl[which(res_all_combined_nosampl$Description == 'Did not converge'),]
+        points(nonconv$n_chc, nonconv$n_ctr, pch = 16, col = alpha(color_palette[4], 0.75), cex=2.25)
         # figure number
         text(x = -3000, y = 18700, labels = 'A', cex = 1, font = 2, xpd=T)
-        legend(x = 0, y = 18600, legend = c('Centenarians value more', 'Centenarians value less', 'Same value'), pch = 21, pt.bg = c(viridis::viridis(3)[2], viridis::viridis(3)[1], viridis::viridis(3)[3]), cex = 0.8, col = 'black', bty = 'n', bg = "white", xpd=T, ncol=1, pt.cex=1.8, inset=c(1,1))
+        legend(x = 0, y = 18600, legend = c('Cognitively Healthy Centenarians value more', 'Cognitively Healthy Centenarians value less', 'Same value', 'Did not converge'), pch = 21, pt.bg = c(color_palette), cex = 0.8, col = 'black', bty = 'n', bg = "white", xpd=T, ncol=2, pt.cex=1.8)
         
         # second figure is the ratio
-        par(mar=c(6, 5, 5, 0), family = 'Geneva')
-        plot(0, 0, ylim=c(0, ceiling(max(pos))), yaxt='n', yaxs = 'i', xlim = c(0, 45), bty = 'n', xaxt = 'none', ylab='', xlab='Value of centenarians compared to controls', pch = 16, col = 'white', cex.lab = 1.50)
+        par(mar=c(6, 6, 5, 0), family = 'Geneva')
+        plot(0, 0, ylim=c(0, ceiling(max(pos))), yaxt='n', yaxs = 'i', xlim = c(0, 45), bty = 'n', xaxt = 'none', ylab='', xlab='Centenarians compared to Age-matched controls', pch = 16, col = 'white', cex.lab = 1.50)
         # yaxis
         axis(side=1, at=seq(0, 45, 5), labels=seq(0, 45, 5), cex=1.25)
         # grid
@@ -612,14 +687,16 @@
         counter = 1
         wid = 0.6
         snplist = unique(res_all_combined_nosampl$locus)
+        # check SLC24A4 to RIN3
+        res_all_combined_nosampl$gene = str_replace_all(res_all_combined_nosampl$gene, 'SLC24A4', 'RIN3')
         for (snp in snplist){
             # plot ratio
             if (res_all_combined_nosampl$ratio[which(res_all_combined_nosampl$locus == snp)] <1){
-                col = viridis::viridis(3)[1]
+                col = color_palette[2]
             } else if (res_all_combined_nosampl$ratio[which(res_all_combined_nosampl$locus == snp)] >1){
-                col = viridis::viridis(3)[2]
+                col = color_palette[1]
             } else {
-                col = viridis::viridis(3)[3]
+                col = ifelse(res_all_combined_nosampl$n_chc[which(res_all_combined_nosampl$locus == snp)] == 16000, color_palette[4], color_palette[3])
             }
             rect(xleft = 0, ybottom = pos[counter]-wid, xright = res_all_combined_nosampl$ratio[which(res_all_combined_nosampl$locus == snp)][1], ytop = pos[counter]+wid, col = col, xpd=T)
             lab_col = ifelse(res_all_combined_nosampl$new_known[which(res_all_combined_nosampl$locus == snp)] == 'new', 'navy', 'darkred')
@@ -628,55 +705,15 @@
         }
         abline(v=1, lty=2, lwd=1.5, col = 'red')
         abline(v=2, lty=2, lwd=1.5, col = 'blue')
-        legend(x = 0, y = ceiling(max(pos)) + ceiling(max(pos))*0.12, legend = c('Centenarians value more', 'Centenarians value less', 'Same value'), pch = 22, pt.bg = c(viridis::viridis(3)[2], viridis::viridis(3)[1], viridis::viridis(3)[3]), cex = 0.8, col = 'black', bty = 'n', bg = "white", xpd=T, ncol=1, pt.cex=1.8, inset=c(1,1))
+        legend(x = 0, y = ceiling(max(pos)) + ceiling(max(pos))*0.12, legend = c('Cognitively Healthy Centenarians value more', 'Cognitively Healthy Centenarians value less', 'Same value', 'Did not converge'), pch = 22, pt.bg = c(color_palette), cex = 0.8, col = 'black', bty = 'n', bg = "white", xpd=T, ncol=2, pt.cex=1.8)
+        text(x = 45, y = ceiling(max(pos)) + ceiling(max(pos))*0.09, labels = 'Genes known', xpd=T, adj = 1, cex = 0.70, col = 'darkred')
+        text(x = 45, y = ceiling(max(pos)) + ceiling(max(pos))*0.07, labels = 'Genes found in latest GWAS', xpd=T, adj = 1, cex = 0.70, col = 'navy')
         # figure number
         text(x = -6, y = ceiling(max(pos)) + ceiling(max(pos))*0.12, labels = 'B', cex = 1, font = 2, xpd=T)
         dev.off()
     }
 
-    # function to draw figure 3 (single)
-    figure_3_single = function(res_all_combined_nosampl, ad_snps){
-        # add new/known
-        info = ad_snps[, c('locus', 'new_known')]
-        res_all_combined_nosampl = merge(res_all_combined_nosampl, info, by='locus')
-        # change names
-        res_all_combined_nosampl$Description[which(res_all_combined_nosampl$Description == 'Centenarians value less')] = 'Centenarians value less than Age-matched controls'
-        res_all_combined_nosampl$Description[which(res_all_combined_nosampl$Description == 'Centenarians value more')] = 'Centenarians value more than Age-matched controls'
-        res_all_combined_nosampl$Description[which(res_all_combined_nosampl$Description == 'Same value (did not converge)')] = 'Same value'
-        # sort
-        res_all_combined_nosampl = res_all_combined_nosampl[order(res_all_combined_nosampl$ratio),]
-        # plot pos
-        pos = as.numeric(barplot(res_all_combined_nosampl$ratio))
-        # background plot
-        pdf('Downloads/figure_3_centenarians.pdf', height = 8, width = 15)
-        par(mar=c(6, 5, 3, 3))
-        plot(0, 0, xlim=c(0, ceiling(max(pos))), xaxs = 'i', ylim = c(0, 40), bty = 'n', xaxt = 'none', xlab='', ylab='Ratio (Age-matched controls/Centenarians)', pch = 16, col = 'white', cex.lab = 1.75)
-        # grid
-        for (x in pos){ segments(x0 = x, y0 = 0, x1 = x, y1 = 40, lwd = 0.4, col = 'grey60') }
-        for (y in seq(0, 40, length.out = 10)){ abline(h = y, lwd = 0.4, col = 'grey60') }
-        counter = 1
-        wid = 0.6
-        snplist = unique(res_all_combined_nosampl$locus)
-        for (snp in snplist){
-            # plot ratio
-            if (res_all_combined_nosampl$ratio[which(res_all_combined_nosampl$locus == snp)] <1){
-                col = viridis::viridis(3)[1]
-            } else if (res_all_combined_nosampl$ratio[which(res_all_combined_nosampl$locus == snp)] >1){
-                col = viridis::viridis(3)[2]
-            } else {
-                col = viridis::viridis(3)[3]
-            }
-            rect(xleft = pos[counter]-wid, ybottom = 0, xright = pos[counter]+wid, ytop = res_all_combined_nosampl$ratio[which(res_all_combined_nosampl$locus == snp)][1], col = col, xpd=T)
-            lab_col = ifelse(res_all_combined_nosampl$new_known[which(res_all_combined_nosampl$locus == snp)] == 'new', 'blue', 'grey60')
-            text(x = pos[counter], y = 0, adj = c(1, 1), col = lab_col, xpd=T, srt=45, labels = res_all_combined_nosampl$gene[which(res_all_combined_nosampl$locus == snp)])
-            counter = counter + 1
-        }
-        abline(h=1, lty=2, lwd=1.5, col = 'red')
-        legend('topleft', legend = c('Centenarians value more than Age-matched controls', 'Centenarians value less than Age-matched controls', 'Same value'), pch = 22, pt.bg = c(viridis::viridis(3)[2], viridis::viridis(3)[1], viridis::viridis(3)[3]), cex = 1.50, col = 'black', bty = 'o', bg = "white")
-        dev.off()
-    }
-
-    # function to draw figure 4c
+    # function to draw figure 4c -- the whole Figure 4 is assembled separately
     figure_4c = function(){
         full_annot = read.table('Downloads/RESULTS_snpXplorer/snp_annotation.txt', h=T, stringsAsFactors = F, sep="\t")
         previous_gset = fread('/Users/nicco/Library/Mobile Documents/com~apple~CloudDocs/Downloads_shared/RESULTS_12334/Enrichment_results.txt', h=T, stringsAsFactors = F)
@@ -826,6 +863,60 @@
         singleAssoc[which(singleAssoc$snp == 'chr16:81739398:G:A_G'),]  # borderline -- PLCG2
     }
 
+    # function to draw figure S1
+    plot_figure_S1 <- function(singleAssoc, ratios, data_path, ad_snps){
+        # create right order for the snps
+            tmp = ratios[which(ratios$test == 'ad_vs_ctr')]
+            tmp$ratio_beta = tmp$beta_aligned / tmp$gwas_beta; tmp = tmp[order(tmp$ratio_beta),]; 
+            tmp$gene[which(duplicated(tmp$gene) == TRUE)] = paste0(tmp$gene[which(duplicated(tmp$gene) == TRUE)], ' (2)')
+            tmp$gene = factor(tmp$gene, levels = tmp$gene)
+            ad_snps_new_info = ad_snps[, c('locus', 'new_known')]
+            tmp = merge(tmp, ad_snps_new_info, by = 'locus')
+        # plot 1 is the grouped barplot with effect-sizes
+            # prepare data for grouped barplot
+            grp_plot = list()
+            for (i in 1:nrow(tmp)){ grp_plot[[(length(grp_plot) + 1)]] = data.frame(Gene = rep(tmp$gene[i], 2), Effect = c(tmp$gwas_beta[i], tmp$beta_aligned[i]), Study = c('GWAS', 'AD cases vs. Centenarians'), low = c(tmp$gwas_beta[i] - (1.96*tmp$se_gwas[i]), tmp$beta_aligned[i] - (1.96*tmp$se[i])), up = c(tmp$gwas_beta[i] + (1.96*tmp$se_gwas[i]), tmp$beta_aligned[i] + (1.96*tmp$se[i]))) }
+            grp_plot = rbindlist(grp_plot)
+            # add labels for new of known snp
+            new_snps = all_freqs_plot$gene[which(all_freqs_plot$new_known == 'new')]
+            grp_plot$label = ifelse(grp_plot$Gene %in% new_snps, 'New SNP in latest GWAS', 'Known SNP')
+            # plot
+            plt_grp = ggplot(grp_plot, aes(fill=Study, y=Effect, x=Gene)) + geom_bar(position="dodge", stat="identity") + coord_cartesian(ylim = c(-1, 1), clip = "on") + xlab("") + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + geom_errorbar(aes(ymin = low, ymax = up), width = 0.2, color = 'grey60', position=position_dodge(.9)) + ylim(-1, 1)
+            plt_grp = plt_grp + facet_grid(cols = vars(label), drop = FALSE, scales = "free")
+        # plot 3 is the effect-size ratio
+            tmp$Comparison_symbol = ''; tmp$Comparison_symbol[which(tmp$two_tail_p <= 0.05)] = 'x'
+            tmp$Comparison = 'Not different'; tmp$Comparison[which(tmp$two_tail_p <= 0.05)] = 'Different from published'
+            tmp$adj_p = p.adjust(tmp$p, 'fdr')
+            # add labels for new of known snp
+            tmp$label = ifelse(tmp$gene %in% new_snps, 'New SNP in latest GWAS', 'Known SNP')
+            # find significant associations to be annotated
+            star_df = data.frame(x = tmp$gene[which(tmp$p <= 0.05)], y = tmp$up_ci_ratio[which(tmp$p <= 0.05)], comparison = tmp$Comparison[which(tmp$p <= 0.05)], label = tmp$label[which(tmp$p <= 0.05)])
+            fdr_df = data.frame(x = tmp$gene[which(tmp$adj_p <= 0.05)], y = tmp$up_ci_ratio[which(tmp$adj_p <= 0.05)], comparison = tmp$Comparison[which(tmp$adj_p <= 0.05)], label = tmp$label[which(tmp$adj_p <= 0.05)])
+            #tmp$ratio_beta[which(tmp$gene == 'TREML2')] = NA; tmp$low_ci_ratio[which(tmp$gene == 'TREML2')] = NA; tmp$up_ci_ratio[which(tmp$gene == 'TREML2')] = NA
+            # the actual plot
+            plt_ratio = ggplot(tmp, aes(x = gene, y = ratio_beta, fill = Comparison)) + geom_bar(stat = 'identity') + geom_errorbar(aes(ymin = low_ci_ratio, ymax = up_ci_ratio), width = 0.4, color = 'grey60') + geom_hline(yintercept = 1, linetype = 'dashed', col = 'red') +
+                theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + xlab('') + ylab('Effect-size Ratio')
+            plt_ratio = plt_ratio + facet_grid(cols = vars(label), drop = FALSE, scales = "free")
+            # annotation of significant associations
+            ann_sign_assoc = data.frame(gene = star_df$x, ratio_beta = star_df$y, Comparison = star_df$comparison, label = star_df$label)
+            plt_ratio = plt_ratio + geom_text(data = ann_sign_assoc, label = '*')
+            # annotation of fdr significant associations
+            ann_fdr_assoc = data.frame(gene = fdr_df$x, ratio_beta = fdr_df$y, Comparison = fdr_df$comparison, label = fdr_df$label)
+            plt_ratio = plt_ratio + geom_text(data = ann_fdr_assoc, label = '**', vjust = -1.5)
+            # annotation of mean change
+            change_df = data.frame(gene = c(1,1,1), ratio_beta = c(15, 15, 13), Comparison = rep('Not different', 3), label = c('Known SNP', 'New SNP in latest GWAS', 'Known SNP'))
+            labels_change = c(paste0('Median ratio known SNP = ', round(median(tmp$ratio_beta[(!(is.na(tmp$ratio_beta))) & tmp$label == 'Known SNP']), 2)),
+                paste0('Median ratio new SNP = ', round(median(tmp$ratio_beta[(!(is.na(tmp$ratio_beta))) & tmp$label != 'Known SNP']), 2)),
+                paste0('Median ratio overall = ', round(median(tmp$ratio_beta[(!(is.na(tmp$ratio_beta)))]), 2)))
+            plt_ratio = plt_ratio + geom_text(data = change_df, label = labels_change, hjust = 0)
+        # manually combine the plots together
+        combined_plot = ggarrange(plotlist = list(plt_grp, plt_ratio), nrow = 2, ncol = 1, labels = "AUTO")
+        pdf('figure_s1.pdf', height = 12, width = 16)
+        combined_plot
+        dev.off()
+        return('** plot is done!')
+    }
+    
     # extract imputation quality of the AD-snps
     extractQuality <- function(ad_snps, data_path){
         # change data path as info files are in another directory
@@ -1055,51 +1146,10 @@
         return(res0)
     }
 
-    # function to check children -- keep 1 child per family
-    checkchildren <- function(tmp_prs, pheno_final_raw){
-        # separate children from controls
-        children = tmp_prs[which(tmp_prs$PHENO == 'family_100plus'),]
-        no_children = tmp_prs[which(tmp_prs$PHENO != 'family_100plus'),]
-        # add 100plus family id
-        children = merge(children, pheno_final_raw, by.x = 'IID', by.y = 'ID_GWAS')
-        children$family_100plus = str_split_fixed(children$ID_100plus, '_', 3)[, 1]
-        children = children[sample(nrow(children)),]
-        children_unique = children[!duplicated(children$family_100plus),]
-        # re-join with controls
-        newdf = rbind.fill(children_unique, no_children[which(no_children$PHENO != 'family_100plus'),])
-        # now we need to calculate pcs
-        fam = fread('/project/holstegelab/Share/gwas_array/TOPMED/data/Pop_stratification_IBD/data_common_20k_random_hg19.fam', h=F, stringsAsFactors=F)
-        fam_sb = fam[which(fam$V2 %in% newdf$IID),]
-        write.table(fam_sb[, c('V1', 'V2')], 'samples_children_controls.txt', quote=F, row.names=F, col.names=F)
-        system('plink --bfile /project/holstegelab/Share/gwas_array/TOPMED/data/Pop_stratification_IBD/data_common_20k_random_hg19 --keep samples_children_controls.txt --pca --out pca_children_controls')
-        # read pca components
-        pcs = fread('pca_children_controls.eigenvec', h=F, stringsAsFactors=F)
-        colnames(pcs) = c('FID', 'IID', paste0('PC', seq(1, 20)))
-        pcs_sb = pcs[, c('IID', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5')]
-        tmp_prs = merge(newdf, pcs_sb, by = 'IID')
-        return(tmp_prs)
-    }
-
-    # function to make pca of the children and the controls only
-    pcs_children <- function(tmp_prs, type){
-        if (type != 'no_pca'){
-            fam = fread('/project/holstegelab/Share/gwas_array/TOPMED/data/Pop_stratification_IBD/data_common_20k_random_hg19.fam', h=F, stringsAsFactors=F)
-            fam_sb = fam[which(fam$V2 %in% tmp_prs$IID),]
-            write.table(fam_sb[, c('V1', 'V2')], 'all_children_and_controls.txt', quote=F, row.names=F, col.names=F)
-            system('plink --bfile /project/holstegelab/Share/gwas_array/TOPMED/data/Pop_stratification_IBD/data_common_20k_random_hg19 --keep all_children_and_controls.txt --pca --out pca_all_children_controls')
-        }
-        # read pca components
-        pcs = fread('pca_all_children_controls.eigenvec', h=F, stringsAsFactors=F)
-        colnames(pcs) = c('FID', 'IID', paste0('PC', seq(1, 20)))
-        pcs_sb = pcs[, c('IID', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5')]
-        tmp_prs = merge(tmp_prs, pcs_sb, by = 'IID')
-        return(tmp_prs)
-    }
-
 # MAIN ANALYSES
 # 1. read variants from AD paper -- both clinical AD and proxy data
-    ad_snps <- fread("AD_snps.txt", h=T, stringsAsFactors=F)
-    ad_snps_proxy <- fread("Bellenguez_2022.txt", h=T, stringsAsFactors=F)
+    ad_snps <- fread("AD_snps_clinicalAD.txt", h=T, stringsAsFactors=F)
+    ad_snps_proxy <- fread("AD_snps_proxyAD.txt", h=T, stringsAsFactors=F)
     # rename columns
     colnames(ad_snps) = c('rsid', 'chrom', 'pos', 'gene', 'locus', 'minor/major', 'or (95% ci)', 'p', 'info')
     # add odds ratio and confidence interval
@@ -1113,17 +1163,17 @@
     ad_snps$locus = paste0('chr', ad_snps$chrom, ':', ad_snps$pos)
 
 # 2. set the path to the imputed genotypes
-    data_path = '/project/holstegelab/Share/gwas_array/TOPMED/data/imputed_unscrambled_genotypes'
+    data_path = 'path/to/imputed/genotypes'
 
 # 3. set the path to the phenotype data
-    pheno <- read.table("/project/holstegelab/Share/gwas_array/mapping_files/20211027_phenotypes_ADC_samplesKept.txt", h=T)
-    load('/project/holstegelab/Share/gwas_array/mapping_files/phenotypes_20211027_All.Rdata')
+    pheno <- read.table("path/to/QC/GWAS/samples_kept.txt", h=T)
+    load('path/to/phenotype/file')
 
 # 4. extract snps from imputed data -- we use stage I SNP effects, as they were estimated using only clinically diagnosed samples
     dosages_pheno <- function_extractAndPrepare(ad_snps, data_path, pheno_final_raw)
     dosages_pheno_proxy <- function_extractAndPrepare(ad_snps_proxy, data_path, pheno_final_raw)
 
-# 5. exclude 1 SNP (chr4:993555:GAGTT:G_GAGTT) as it should not be there
+# 5. exclude 1 SNP (chr4:993555:GAGTT:G_GAGTT) as it is multiallelic -- exclude the allele that is not associated with AD
     dosages_pheno$'chr4:993555:GAGTT:G_GAGTT' = NULL; dosages_pheno_proxy$'chr4:993555:GAGTT:G_GAGTT' = NULL
     dosages_pheno_noAPOE = dosages_pheno_proxy
     dosages_pheno_noAPOE$"chr19:44908822:C:T_C" = NULL; dosages_pheno_noAPOE$"chr19:44908684:T:C_T" = NULL
@@ -1133,9 +1183,14 @@
     prs_allSNPs <- function_PRS(dosages_pheno_proxy, ad_snps_proxy)
     prs_allSNPs_noAPOE <- function_PRS(dosages_pheno_noAPOE, ad_snps_proxy)
 
-# 7. run associations
-    assoc_all = function_testAssoc(prs_allSNPs, pheno, pheno_final_raw, 'all_children')
-    assoc_all_noAPOE = function_testAssoc(prs_allSNPs_noAPOE, pheno, pheno_final_raw, 'all_children')
+# 7. run associations -- association with children is still included despite not bein in the manuscript anymore
+    resAssoc = function_testAssoc(prs_allSNPs, pheno, pheno_final_raw, 'all_children')
+    assoc_all = resAssoc[[1]]; assoc_gender = rbindlist(resAssoc[[2]])
+    resAssoc_noAPOE = function_testAssoc(prs_allSNPs_noAPOE, pheno, pheno_final_raw, 'all_children')
+    assoc_all_noAPOE = resAssoc_noAPOE[[1]]; assoc_gender_noAPOE = rbindlist(resAssoc_noAPOE[[2]])
+    # odds ratio and confidence intervals for the gender
+    assoc_gender$or = exp(assoc_gender$Estimate); assoc_gender$low_ci = exp(assoc_gender$Estimate - 1.96*assoc_gender$"Std. Error"); assoc_gender$up_ci = exp(assoc_gender$Estimate + 1.96*assoc_gender$"Std. Error")
+    assoc_gender_noAPOE$or = exp(assoc_gender_noAPOE$Estimate); assoc_gender_noAPOE$low_ci = exp(assoc_gender_noAPOE$Estimate - 1.96*assoc_gender_noAPOE$"Std. Error"); assoc_gender_noAPOE$up_ci = exp(assoc_gender_noAPOE$Estimate + 1.96*assoc_gender_noAPOE$"Std. Error")
     # same but keeping unrelated children instead of all of them
     assoc_all_unrelated = function_testAssoc(prs_allSNPs, pheno, pheno_final_raw, 'no_pca'); assoc_all_unrelated = assoc_all_unrelated[which(assoc_all_unrelated$comparison == 'children_vs_ctr'),]
     assoc_all_unrelated_noAPOE = function_testAssoc(prs_allSNPs_noAPOE, pheno, pheno_final_raw, 'no_pca'); assoc_all_unrelated_noAPOE = assoc_all_unrelated_noAPOE[which(assoc_all_unrelated_noAPOE$comparison == 'children_vs_ctr'),]
@@ -1150,8 +1205,6 @@
     assoc_all_combined = rbind(assoc_all, assoc_all_noAPOE)
     # correct for multiple tests
     assoc_all_combined$p_adjust = p.adjust(assoc_all_combined$"Pr(>|z|", 'fdr')
-    # fix something
-    assoc_all_combined$N_cases[which(assoc_all_combined$N_cases == 3082)] = 3165
 
 # 8. single-variant associations (ctr vs chc -- ad vs chc -- ad vs ctr)
     singleAssoc = function_singleVar(dosages_pheno, pheno)
@@ -1258,9 +1311,7 @@
         xlab("") + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = 'top') + geom_hline(yintercept = 1, linetype = 'dashed', col = 'red')
     pipi = pipi + facet_grid(cols = vars(Type), scales = 'free')    
     change_df = data.frame(gene = c(1,1,1), ratio = c(40, 37, 40), Type = c('Known SNP', 'Known SNP', 'New SNP in latest GWAS'), Description = rep('Centenarians value more', 3))
-    labels_change = c(paste0('Mean ratio known SNP = ', round(mean(converged_all$ratio[which(converged_all$Type == 'Known SNP')]), 2)),
-        paste0('Mean ratio new SNP = ', round(mean(converged_all$ratio), 2)),
-        paste0('Mean ratio overall = ', round(mean(converged_all$ratio[which(converged_all$Type == 'New SNP in latest GWAS')]), 2)))
+    labels_change = c(paste0('Mean ratio known SNP = ', round(mean(converged_all$ratio[which(converged_all$Type == 'Known SNP')]), 2)), paste0('Mean ratio new SNP = ', round(mean(converged_all$ratio), 2)), paste0('Mean ratio overall = ', round(mean(converged_all$ratio[which(converged_all$Type == 'New SNP in latest GWAS')]), 2)))
     pipi = pipi + geom_text(data = change_df, label = c(labels_change), hjust = 0)
     pdf('figure_3.pdf', width = 16, height = 9)
     pipi
@@ -1268,18 +1319,100 @@
     # plot figure S2 as the raw number of samples including the SNP that did not converge
     # need to restructure data
     dataplot = data.frame()
-    for (i in 1:nrow(res_all_combined_nosampl)){
-        dataplot = rbind(dataplot, data.frame(gene = res_all_combined_nosampl$gene[i], n = c(res_all_combined_nosampl$n_ctr[i], res_all_combined_nosampl$n_chc[i]), Type = c('Normal Controls', 'Centenarians'), desc = res_all_combined_nosampl$Description[i]))
-    }
+    for (i in 1:nrow(res_all_combined_nosampl)){ dataplot = rbind(dataplot, data.frame(gene = res_all_combined_nosampl$gene[i], n = c(res_all_combined_nosampl$n_ctr[i], res_all_combined_nosampl$n_chc[i]), Type = c('Normal Controls', 'Centenarians'), desc = res_all_combined_nosampl$Description[i])) }
     res_all_combined_nosampl$Description[which(res_all_combined_nosampl$n_chc == 16000 & res_all_combined_nosampl$n_ctr < 16000)] = 'Centenarians did not converge'
     res_all_combined_nosampl$Description[which(res_all_combined_nosampl$n_chc < 16000 & res_all_combined_nosampl$n_ctr == 16000)] = 'Normal Controls did not converge'
-    pupu = ggplot(res_all_combined_nosampl, aes(x = n_ctr, y = n_chc, color = Description)) + geom_jitter(size = 4, alpha = 0.6) + geom_abline(slope = 1, linetype = 'dashed', col = 'grey40') + xlab('Number of Normal Controls') +
-        ylab('Number of Centenarians') + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_colour_viridis_d()
+    pupu = ggplot(res_all_combined_nosampl, aes(x = n_ctr, y = n_chc, color = Description)) + geom_jitter(size = 4, alpha = 0.6) + geom_abline(slope = 1, linetype = 'dashed', col = 'grey40') + xlab('Number of Normal Controls') + ylab('Number of Centenarians') + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_colour_viridis_d()
     pdf('figure_s2.pdf', height = 7, width = 9)
     pupu
     dev.off()
     # finally output the table
     write.table(res_all_combined_nosampl, 'table_s6.txt', quote = F, row.names = F, sep = "\t", dec = ',')
+
+# 14. last thing: estimate how many protective allele each centenarian has compared to controls
+    # load environment
+    load('20230505_workspace_final.RData')
+    write.table(children$IID, 'children_samples.txt', quote=F, row.names=F, col.names=F)
+    # extract allele counts
+    res_counts = extract_counts(ratios)
+    allele_counts = res_counts[[1]]; allele_counts_plot = res_counts[[2]]
+    # identify protective alleles
+    allele_counts$locus = paste0('chr', allele_counts$locus)
+    allele_counts$prot_allele_chc = NA; allele_counts$prot_allele_ctr = NA; allele_counts$prot_allele_ad = NA; allele_counts$prot_allele_off = NA;
+    ad_snps_info = ad_snps[, c('minor/major', 'locus', 'or')]
+    ad_snps_info$a1 = str_split_fixed(ad_snps_info$"minor/major", '/', 2)[, 1]
+    ad_snps_info$a2 = str_split_fixed(ad_snps_info$"minor/major", '/', 2)[, 2]
+    ad_snps_info$prot_allele = ifelse(ad_snps_info$or > 1, ad_snps_info$a2, ad_snps_info$a1)
+    allele_counts = merge(allele_counts, ad_snps_info, by = 'locus')
+    for (i in 1:nrow(allele_counts)){
+        if (allele_counts$a1[i] == allele_counts$prot_allele[i]){
+            allele_counts$prot_allele_chc[i] = allele_counts$alt_count_chc[i]
+            allele_counts$prot_allele_ctr[i] = allele_counts$alt_count_ctr[i]
+            allele_counts$prot_allele_ad[i] = allele_counts$alt_count_ad[i]
+            allele_counts$prot_allele_off[i] = allele_counts$alt_count_off[i]
+        } else {
+            allele_counts$prot_allele_chc[i] = allele_counts$n_allele_chc[i] - allele_counts$alt_count_chc[i]
+            allele_counts$prot_allele_ctr[i] = allele_counts$n_allele_ctr[i] - allele_counts$alt_count_ctr[i]
+            allele_counts$prot_allele_ad[i] = allele_counts$n_allele_ad[i] - allele_counts$alt_count_ad[i]
+            allele_counts$prot_allele_off[i] = allele_counts$n_allele_off[i] - allele_counts$alt_count_off[i]
+        }
+    }
+    # maybe we should do it at the dosage level: question is how many protective alleles has each sample
+    chc_sum_protective = count_prot_dosages(dosages_pheno, 'chc_samples.txt', ad_snps_info)
+    ctr_sum_protective = count_prot_dosages(dosages_pheno, 'ctr_samples.txt', ad_snps_info)
+    ad_sum_protective = count_prot_dosages(dosages_pheno, 'ad_samples.txt', ad_snps_info)
+    off_sum_protective = count_prot_dosages(dosages_pheno, 'children_samples.txt', ad_snps_info)
+    summary(chc_sum_protective$sum_protective)
+    summary(off_sum_protective$sum_protective)
+    summary(ctr_sum_protective$sum_protective)
+    summary(ad_sum_protective$sum_protective)
+    summary(chc_sum_protective$n_variants_with_protective)
+    summary(off_sum_protective$n_variants_with_protective)
+    summary(ctr_sum_protective$n_variants_with_protective)
+    summary(ad_sum_protective$n_variants_with_protective)
+    summary(chc_sum_protective$n_homo_protective)
+    summary(off_sum_protective$n_homo_protective)
+    summary(ctr_sum_protective$n_homo_protective)
+    summary(ad_sum_protective$n_homo_protective)
+    # combine
+    df = data.frame(Value = c(chc_sum_protective$sum_protective, off_sum_protective$sum_protective, ctr_sum_protective$sum_protective, ad_sum_protective$sum_protective), Pheno = c(rep('Centenarian', nrow(chc_sum_protective)), rep('Offspring', nrow(off_sum_protective)), rep('Controls', nrow(ctr_sum_protective)), rep('AD', nrow(ad_sum_protective))))
+    df$Pheno = factor(df$Pheno, levels = c('Centenarian', 'Offspring', 'Controls', 'AD'))
+    ggplot(df, aes(x = Pheno, y = Value, fill = Pheno)) + geom_violin() + geom_boxplot(width=0.25) + xlab('Phenotype') + ylab('Number of Protective alleles')
+    df_vars = data.frame(Value = c(chc_sum_protective$n_variants_with_protective, off_sum_protective$n_variants_with_protective, ctr_sum_protective$n_variants_with_protective, ad_sum_protective$n_variants_with_protective), Pheno = c(rep('Centenarian', nrow(chc_sum_protective)), rep('Offspring', nrow(off_sum_protective)), rep('Controls', nrow(ctr_sum_protective)), rep('AD', nrow(ad_sum_protective))))
+    df_vars$Pheno = factor(df_vars$Pheno, levels = c('Centenarian', 'Offspring', 'Controls', 'AD'))
+    ggplot(df_vars, aes(x = Pheno, y = Value, fill = Pheno)) + geom_violin() + geom_boxplot(width=0.25) + xlab('Phenotype') + ylab('Number of variants with at least 1 protective allele')
+    df_vars_homo = data.frame(Value = c(chc_sum_protective$n_homo_protective, off_sum_protective$n_homo_protective, ctr_sum_protective$n_homo_protective, ad_sum_protective$n_homo_protective), Pheno = c(rep('Centenarian', nrow(chc_sum_protective)), rep('Offspring', nrow(off_sum_protective)), rep('Controls', nrow(ctr_sum_protective)), rep('AD', nrow(ad_sum_protective))))
+    df_vars_homo$Pheno = factor(df_vars_homo$Pheno, levels = c('Centenarian', 'Offspring', 'Controls', 'AD'))
+    ggplot(df_vars_homo, aes(x = Pheno, y = Value, fill = Pheno)) + geom_violin() + geom_boxplot(width=0.25) + xlab('Phenotype') + ylab('Number of variants with 2 protective allele')
+    # minor allele frequency
+    all_freqs
+    # add protective alleles
+    all_freqs$locus = paste0('chr', all_freqs$locus)
+    all_freqs = merge(all_freqs, ad_snps_info, by = 'locus')
+    # calculate frequency of protective alleles
+    all_freqs$freq_prot_chc = ifelse(all_freqs$prot_allele == all_freqs$alt, all_freqs$freq_chc, 1-all_freqs$freq_chc)
+    all_freqs$freq_prot_ctr = ifelse(all_freqs$prot_allele == all_freqs$alt, all_freqs$freq_ctr, 1-all_freqs$freq_ctr)
+    all_freqs$freq_prot_ad = ifelse(all_freqs$prot_allele == all_freqs$alt, all_freqs$freq_ad, 1-all_freqs$freq_ad)
+    all_freqs$freq_prot_off = ifelse(all_freqs$prot_allele == all_freqs$alt, all_freqs$freq_off, 1-all_freqs$freq_off)
+    # ratio of the frequency of protective alleles
+    all_freqs$ratio_freq_prot_chc_ctr = all_freqs$freq_prot_chc / all_freqs$freq_prot_ctr
+    all_freqs$ratio_freq_prot_off_ctr = all_freqs$freq_prot_off / all_freqs$freq_prot_ctr
+    summary(all_freqs$ratio_freq_prot_chc_ctr)
+    summary(all_freqs$ratio_freq_prot_off_ctr)
+    # example for apoe
+    summary(chc_sum_protective[, c('chr17:44352876:C:T_C')])
+    summary(ctr_sum_protective[, c('chr17:44352876:C:T_C')])
+    summary(off_sum_protective[, c('chr17:44352876:C:T_C')])
+    summary(ad_sum_protective[, c('chr17:44352876:C:T_C')])
+    table(chc_sum_protective$'chr17:44352876:C:T_C' > 0.5)/nrow(chc_sum_protective)
+    table(off_sum_protective$'chr17:44352876:C:T_C' > 0.5)/nrow(off_sum_protective)
+    table(ctr_sum_protective$'chr17:44352876:C:T_C' > 0.5)/nrow(ctr_sum_protective)
+    table(ad_sum_protective$'chr17:44352876:C:T_C' > 0.5)/nrow(ad_sum_protective)
+    all_freqs[which(all_freqs$locus == 'chr17:44352876'),]
+    table(chc_sum_protective$'chr17:44352876:C:T_C' > 1.5)/nrow(chc_sum_protective)
+    table(off_sum_protective$'chr17:44352876:C:T_C' > 1.5)/nrow(off_sum_protective)
+    table(ctr_sum_protective$'chr17:44352876:C:T_C' > 1.5)/nrow(ctr_sum_protective)
+    table(ad_sum_protective$'chr17:44352876:C:T_C' > 1.5)/nrow(ad_sum_protective)
 
 # PLOTS
 # 1. figure 1 should be the maf, effect-size and ratio plots
@@ -1291,7 +1424,7 @@
 # 3. figure 3 should be the simulation analysis
     figure_3(res_all_combined_nosampl, ad_snps)
 
-# 4. figure 4 is the gene-set enrichment results -- final image is manually assembled in power point
+# 4. figure 4 is the gene-set enrichment results -- final image is manually assembled separately
     figure_4c()
 
 # Supplementary figures
@@ -1363,7 +1496,7 @@
     }  
     # ggplot
     fig1 = ggplot(data = newdf, aes(x = gene, y = Effect, fill = Study)) + geom_bar(position="dodge", stat="identity") + 
-        ylim(-1.5, 1.5) + theme(legend.position = 'top', axis.ticks.x = element_blank(), axis.text.x = element_blank(), axis.text.y = element_text(size = 10)) + xlab('') + ggtitle('Age-matched controls vs. Centenarians')
+        ylim(-1.5, 1.5) + theme(legend.position = 'top', axis.ticks.x = element_blank(), axis.text.x = element_blank(), axis.text.y = element_text(size = 10)) + xlab('') + ggtitle('Age-matched controls vs. Cognitively Healthy Centenarians')
     fig2 = ggplot(data = ctr_chc_annot, aes(x = gene_name, y = ratio_beta)) + geom_bar(stat = 'identity') + 
         xlab('') + ylab('Effect-size Ratio') + ylim(-6,6) + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text.y = element_text(size = 10)) + geom_hline(yintercept = 1, linetype = 'dashed', col = 'red')
     fig3 = ggarrange(plotlist = list(fig1, fig2), nrow = 2, ncol = 1, labels = 'AUTO')
@@ -1427,4 +1560,230 @@
     write.table(assoc_all_combined, 'table_s7.txt', quote=F, row.names=F, sep='\t', dec=',')
 
 # WORKSPACE
-    save.image('20220930_workspace_final.RData')
+    save.image('path/to/workspace.RData')
+
+##################################################################
+# REVIEWER'S COMMENTS
+    # Synergistic effect of SNPs
+        # load environment
+            load('path/to/workspace.RData')
+        # combination of 86 snps in groups of 2
+            snplist_all = colnames(dosages_pheno)[grep(':', colnames(dosages_pheno))]
+            combinations_snps <- combn(snplist_all, 2)
+            list_of_vectors <- lapply(1:ncol(combinations_snps), function(i) combinations_snps[, i])
+            # iterate through snps
+            interaction_models = data.frame()
+            for (pair in list_of_vectors){
+                # make subset of the dosage file
+                sb = dosages_pheno[, pair]; sb$PHENO = dosages_pheno$diagnosis; sb$ID = dosages_pheno$IID;
+                colnames(sb) = c('snp1', 'snp2', 'pheno', 'id')
+                sb = merge(sb, pheno, by.x = 'id', by.y = 'ID_GWAS')
+                # add case-control labels
+                sb_ad = sb[which(sb$pheno %in% c("Centenarian", "Probable_AD", "Possible_AD", "AD_path")),]
+                sb_ctr = sb[which(sb$pheno %in% c("Centenarian", "Control_100plus", "Control_LASA", "Control_other_twin", "Control_path", "SCD")),]
+                sb_ad$case_control_status = ifelse(sb_ad$pheno == 'Centenarian', 0, 1)
+                sb_ctr$case_control_status = ifelse(sb_ctr$pheno == 'Centenarian', 0, 1)
+                # make the model
+                model_ad = glm(case_control_status ~ snp1 * snp2 + PC1 + PC2 + PC3 + PC4 + PC5, data = sb_ad, family = 'binomial')
+                model_ctr = glm(case_control_status ~ snp1 * snp2 + PC1 + PC2 + PC3 + PC4 + PC5, data = sb_ctr, family = 'binomial')
+                # save info
+                if ('snp1:snp2' %in% rownames(summary(model_ad)$coefficients)){
+                    interaction_models = rbind(interaction_models, data.frame(snp_pair = paste(pair, collapse="-"), beta_interaction = summary(model_ad)$coefficients['snp1:snp2', c("Estimate")], se_interaction = summary(model_ad)$coefficients['snp1:snp2', c('Std. Error')], p_interaction = summary(model_ad)$coefficients['snp1:snp2', c('Pr(>|z|)')], pheno = 'AD'))
+                    interaction_models = rbind(interaction_models, data.frame(snp_pair = paste(pair, collapse="-"), beta_interaction = summary(model_ctr)$coefficients['snp1:snp2', c("Estimate")], se_interaction = summary(model_ctr)$coefficients['snp1:snp2', c('Std. Error')], p_interaction = summary(model_ctr)$coefficients['snp1:snp2', c('Pr(>|z|)')], pheno = 'CTR'))
+                }
+            }
+            # separate ad from ctr associations
+            interaction_models_ad = interaction_models[which(interaction_models$pheno == 'AD'),]
+            interaction_models_ctr = interaction_models[which(interaction_models$pheno == 'CTR'),]
+            # correct with fdr
+            interaction_models_ad$p_interaction_fdr = p.adjust(interaction_models_ad$p_interaction, 'fdr')
+            interaction_models_ctr$p_interaction_fdr = p.adjust(interaction_models_ctr$p_interaction, 'fdr')
+            # sort by p
+            interaction_models_ad = interaction_models_ad[order(interaction_models_ad$p_interaction_fdr),]
+            interaction_models_ctr = interaction_models_ctr[order(interaction_models_ctr$p_interaction_fdr),]
+            head(interaction_models_ad)
+            # only 1 significant after correction in AD -- TREML2 (chr6:41181270:A:G_A) and IGH-2 (chr14:106665591:G:A_G)
+            # 0 carriers in centenarians, 8 in the AD cases, 7 of which are homozygous carriers of the other variant
+            head(interaction_models_ctr)
+            # 2 significant after correction in CTR -- TREML2 (chr6:41181270:A:G_A) and COX7C (chr5:86927378:T:C_T) // TREML2 (chr6:41181270:A:G_A) and KLF16 (chr19:1854254:G:GC_G )
+            # they are all common expect TREML2 which is rare (0.004) - maybe that explains?
+        # maybe interesting to look at associations with the components -- maybe not
+            association_components = data.frame()
+            for (snp in snplist_all){
+                sb = data.frame(snp1 = dosages_pheno[, snp], pheno = dosages_pheno$diagnosis, id = dosages_pheno$IID)
+                sb = merge(sb, pheno, by.x = 'id', by.y = 'ID_GWAS')
+                # add case-control labels
+                sb_ad = sb[which(sb$pheno %in% c("Centenarian", "Probable_AD", "Possible_AD", "AD_path")),]
+                sb_ctr = sb[which(sb$pheno %in% c("Centenarian", "Control_100plus", "Control_LASA", "Control_other_twin", "Control_path", "SCD")),]
+                sb_mat = sb[which(sb$pheno %in% c("Probable_AD", "Possible_AD", "AD_path", "Control_100plus", "Control_LASA", "Control_other_twin", "Control_path", "SCD")),]
+                sb_ad$case_control_status = ifelse(sb_ad$pheno == 'Centenarian', 0, 1)
+                sb_ctr$case_control_status = ifelse(sb_ctr$pheno == 'Centenarian', 0, 1)
+                sb_mat$case_control_status = ifelse(sb_mat$pheno %in% c("Probable_AD", "Possible_AD", "AD_path"), 1, 0)
+                # make the model
+                model_ad = glm(case_control_status ~ snp1 + PC1 + PC2 + PC3 + PC4 + PC5, data = sb_ad, family = 'binomial')
+                model_ctr = glm(case_control_status ~ snp1 + PC1 + PC2 + PC3 + PC4 + PC5, data = sb_ctr, family = 'binomial')
+                model_mat = glm(case_control_status ~ snp1 + PC1 + PC2 + PC3 + PC4 + PC5, data = sb_mat, family = 'binomial')
+                # of the PCs, take the most significant
+                tmp_ad = data.frame(summary(model_ad)$coefficients); tmp_ad = tmp_ad[grep('PC', rownames(tmp_ad)),]; tmp_ad = tmp_ad[order(tmp_ad$'Pr...z..'),]
+                tmp_ctr = data.frame(summary(model_ctr)$coefficients); tmp_ctr = tmp_ctr[grep('PC', rownames(tmp_ctr)),]; tmp_ctr = tmp_ctr[order(tmp_ctr$'Pr...z..'),]
+                tmp_mat = data.frame(summary(model_mat)$coefficients); tmp_mat = tmp_mat[grep('PC', rownames(tmp_mat)),]; tmp_mat = tmp_mat[order(tmp_mat$'Pr...z..'),]
+                # save the info
+                association_components = rbind(association_components, data.frame(snp = rep(snp, 3), type = c('AD_CHC', 'CTR_CHC', 'AD_CTR'), variable = c(rownames(tmp_ad)[1], rownames(tmp_ctr)[1], rownames(tmp_mat)[1]), p = c(tmp_ad$'Pr...z..'[1], tmp_ctr$'Pr...z..'[1], tmp_mat$'Pr...z..'[1])))
+            }
+            # separate associations
+            association_components_ad = association_components[which(association_components$type == 'AD_CHC'),]
+            association_components_ctr = association_components[which(association_components$type == 'CTR_CHC'),]
+            association_components_mat = association_components[which(association_components$type == 'AD_CTR'),]
+            # correct with fdr
+            association_components_ad$p_fdr = p.adjust(association_components_ad$p, 'fdr', n=nrow(association_components_ad))
+            association_components_ctr$p_fdr = p.adjust(association_components_ctr$p, 'fdr', n=nrow(association_components))
+            association_components_mat$p_fdr = p.adjust(association_components_mat$p, 'fdr', n=nrow(association_components))
+            # sort by p
+            association_components_ad = association_components_ad[order(association_components_ad$p_fdr),]
+            association_components_ctr = association_components_ctr[order(association_components_ctr$p_fdr),]
+            association_components_mat = association_components_mat[order(association_components_mat$p_fdr),]
+            head(association_components_ad)
+            head(association_components_ctr)
+            head(association_components_mat)
+        # maybe we can look at survival in the centenarians
+            # read survival data
+            library(survival)
+            surv_data = read.table('age_death_centenarians.txt', h=T, stringsAsFactors=F, sep="\t", dec=",")
+            # take centenarians and merge with this data
+            chc = pheno[which(pheno$diagnosis == 'Centenarian'),]
+            chc = merge(chc, pheno_final_raw, by = 'ID_GWAS')
+            chc_info = chc[, c('ID_GWAS', 'ID_100plus', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'sex.x')]
+            colnames(chc_info) = c('ID_GWAS', 'ID_100plus', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'sex')
+            prs_chc_info = merge(prs_allSNPs, chc_info, by.x = 'IID', by.y = 'ID_GWAS')
+            prs_chc_info_surv = merge(prs_chc_info, surv_data, by.x = 'ID_100plus', by.y = 'studysubjectid')
+            # we lose 1 sample
+            # 27 are still alive --> calculate difference in time between age at entrance and now
+            tmp = prs_chc_info_surv
+            xx = data.frame(stringr::str_split_fixed(tmp$date_entrance_interview, '-', 3)); xx$X3 = paste0('20', xx$X3); xx$X5 = paste0(xx$X1, '-', xx$X2, '-', xx$X3)
+            tmp$date_entrance_interview = xx$X5
+            tmp$date_entrance_interview = as.Date(tmp$date_entrance_interview, format = '%d-%m-%Y')
+            tmp$death = ifelse(is.na(tmp$age_at_death_calc), 0, 1)
+            tmp$age_at_death_calc[is.na(tmp$age_at_death_calc)] = tmp$age_entrance_interview[is.na(tmp$age_at_death_calc)] + difftime(as.Date('24-10-2023', format = '%d-%m-%Y'), tmp$date_entrance_interview[is.na(tmp$age_at_death_calc)], unit="weeks")/52.25
+            info_surv = tmp[, c('IID', 'ID_100plus', 'death', 'age_at_death_calc', 'sex', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5')]
+            prs_noAPOE_surv = merge(prs_allSNPs_noAPOE, info_surv, by = 'IID')
+            # exclude 2 NAs
+            tmp_clean = tmp[!is.na(tmp$age_at_death_calc),]
+            cox_model = coxph(Surv(age_at_death_calc, death) ~ PRS + sex + PC1 + PC2 + PC3 + PC4 + PC5, data = tmp)
+            cox_model_noAPOE = coxph(Surv(age_at_death_calc, death) ~ PRS + sex + PC1 + PC2 + PC3 + PC4 + PC5, data = prs_noAPOE_surv)
+            summary(cox_model)
+            summary(cox_model_noAPOE)
+            # try survival in lasa as well
+            surv_data = read.table('lasa_phenotypes_QCpassed.txt', h=T, stringsAsFactors=F, sep="\t")
+            surv_data$surv_time <- surv_data$age_GWA - surv_data$age_baseline
+            surv_data <- surv_data[, c("respnr", "death", "surv_time", "age_baseline", "sex")]
+            surv_data <- surv_data[which(surv_data$death != "-1"),]
+            surv_data$respnr <- as.character(surv_data$respnr)
+            # add prs
+            surv_data_prs = merge(prs_allSNPs, surv_data, by.y = 'respnr', by.x = 'IID')
+            surv_data_prs_noAPOE = merge(prs_allSNPs_noAPOE, surv_data, by.y = 'respnr', by.x = 'IID')
+            # add covariates
+            covar = pheno[, c('ID_GWAS', 'PC1', 'PC2', 'PC3', 'PC4', 'PC5')]
+            surv_data_prs = merge(surv_data_prs, covar, by.x = 'IID', by.y = 'ID_GWAS')
+            surv_data_prs_noAPOE = merge(surv_data_prs_noAPOE, covar, by.x = 'IID', by.y = 'ID_GWAS')
+            head(surv_data_prs)
+            # cox model
+            cox_lasa = coxph(Surv(time = surv_data_prs$age_baseline-min(surv_data_prs$age_baseline), time2 = surv_data_prs$age_baseline+surv_data_prs$surv_time-min(surv_data_prs$age_baseline), event = surv_data_prs$death, type="counting") ~ PRS + sex + PC1 + PC2 + PC3 + PC4 + PC5, data = surv_data_prs)
+            cox_lasa_noAPOE = coxph(Surv(time = surv_data_prs_noAPOE$age_baseline-min(surv_data_prs_noAPOE$age_baseline), time2 = surv_data_prs_noAPOE$age_baseline+surv_data_prs_noAPOE$surv_time-min(surv_data_prs_noAPOE$age_baseline), event = surv_data_prs_noAPOE$death, type="counting")  ~ PRS + sex + PC1 + PC2 + PC3 + PC4 + PC5, data = surv_data_prs_noAPOE)
+            summary(cox_lasa)
+            summary(cox_lasa_noAPOE)
+    # Compare offspring vs. controls -- single-variant
+        single_variant_offspring = data.frame()
+        for (snp in snplist_all){
+            sb = data.frame(snp1 = dosages_pheno[, snp], pheno = dosages_pheno$diagnosis, id = dosages_pheno$IID)
+            colnames(sb) = c('snp1', 'pheno', 'id')
+            # add case-control labels
+            sb_off = sb[which(sb$id %in% children_clean$IID),]; sb_off$case_control_status = 0
+            sb_off = sb_off[which(sb_off$pheno == 'family_100plus'),]
+            sb_ctr = sb[which(sb$pheno %in% c("Control_100plus", "Control_LASA", "Control_other_twin", "Control_path", "SCD")),]; sb_ctr$case_control_status = 1
+            sb = rbind(sb_off, sb_ctr)
+            sb_ph = merge(sb, children_clean, by.x = 'id', by.y = 'IID')
+            # make the model
+            model = glm(case_control_status ~ snp1 + PC1 + PC2 + PC3 + PC4 + PC5, data = sb_ph, family = 'binomial')
+            # of the PCs, take the most significant
+            tmp = data.frame(summary(model)$coefficients)
+            single_variant_offspring = rbind(single_variant_offspring, data.frame(snp = snp, beta = tmp$Estimate[2], se = tmp$"Std..Error"[2], p = tmp$"Pr...z.."[2]))        
+        }
+        # correct
+        single_variant_offspring$p_fdr = p.adjust(single_variant_offspring$p, 'fdr')
+        # sort
+        single_variant_offspring = single_variant_offspring[order(single_variant_offspring$p_fdr),]
+        # add snps info
+        single_variant_offspring$snpid = NA
+        for (i in 1:nrow(single_variant_offspring)){ single_variant_offspring$snpid[i] = paste0(stringr::str_split_fixed(single_variant_offspring$snp[i], ':', 4)[, 1:2], collapse=":") }
+        head(single_variant_offspring)
+        single_variant_offspring = merge(single_variant_offspring, ad_snps, by.x = 'snpid', by.y = 'locus')
+        single_variant_offspring$allele = stringr::str_split_fixed(stringr::str_split_fixed(single_variant_offspring$snp, ':', 4)[, 4], '_', 2)[, 2]
+        write.table(single_variant_offspring, '20231023_single_variant_offspring.txt', quote=F, row.names=F, sep="\t", dec=',')
+    # Sensitivity analysis for EOAD (971, age <=65) vs. LOAD (1309, age>65)
+        single_variant_sensitivity = data.frame()
+        for (snp in snplist_all){
+            sb = data.frame(snp1 = dosages_pheno[, snp], pheno = dosages_pheno$diagnosis, id = dosages_pheno$IID)
+            colnames(sb) = c('snp1', 'pheno', 'id')
+            # only ad
+            sb_ad = sb[which(sb$pheno %in% c("Probable_AD", "Possible_AD", "AD_path")),]
+            # add case-control labels
+            sb_ad_ph = merge(sb_ad, pheno, by.x = 'id', by.y = 'ID_GWAS')
+            # add case-control status based on the age
+            sb_ad_ph$case_control_status = ifelse(sb_ad_ph$age <=65, 1, 0)
+            # make the model
+            model = glm(case_control_status ~ snp1 + PC1 + PC2 + PC3 + PC4 + PC5, data = sb_ad_ph, family = 'binomial')
+            # of the PCs, take the most significant
+            tmp = data.frame(summary(model)$coefficients)
+            single_variant_sensitivity = rbind(single_variant_sensitivity, data.frame(snp = snp, beta = tmp$Estimate[2], se = tmp$"Std..Error"[2], p = tmp$"Pr...z.."[2]))        
+        }
+        # correct
+        single_variant_sensitivity$p_fdr = p.adjust(single_variant_sensitivity$p, 'fdr')
+        # sort
+        single_variant_sensitivity = single_variant_sensitivity[order(single_variant_sensitivity$p_fdr),]
+        head(single_variant_sensitivity)
+        # add snps info
+        single_variant_sensitivity$snpid = NA
+        for (i in 1:nrow(single_variant_sensitivity)){ single_variant_sensitivity$snpid[i] = paste0(stringr::str_split_fixed(single_variant_sensitivity$snp[i], ':', 4)[, 1:2], collapse=":") }
+        head(single_variant_sensitivity)
+        single_variant_sensitivity = merge(single_variant_sensitivity, ad_snps, by.x = 'snpid', by.y = 'locus')
+        single_variant_sensitivity$allele = stringr::str_split_fixed(stringr::str_split_fixed(single_variant_sensitivity$snp, ':', 4)[, 4], '_', 2)[, 2]
+        write.table(single_variant_sensitivity, '20231023_single_variant_sensitivity_analysis.txt', quote=F, row.names=F, sep="\t", dec=',')
+        # and also at the PRS level
+        prs_ad = prs_allSNPs[which(prs_allSNPs$PHENO %in% c("Probable_AD", "Possible_AD", "AD_path")),]
+        prs_ad_noAPOE = prs_allSNPs_noAPOE[which(prs_allSNPs_noAPOE$PHENO %in% c("Probable_AD", "Possible_AD", "AD_path")),]
+        prs_ad = merge(prs_ad, pheno, by.x = "IID", by.y = 'ID_GWAS')
+        prs_ad_noAPOE = merge(prs_ad_noAPOE, pheno, by.x = "IID", by.y = 'ID_GWAS')
+        # separate eoad and load
+        prs_ad$case_control_status = ifelse(prs_ad$age <= 65, 1, 0)
+        prs_ad_noAPOE$case_control_status = ifelse(prs_ad_noAPOE$age <= 65, 1, 0)
+        # models
+        sensitivity_model = glm(case_control_status ~ PRS + PC1 + PC2 + PC3 + PC4 + PC5, data = prs_ad)
+        sensitivity_model_noAPOE = glm(case_control_status ~ PRS + PC1 + PC2 + PC3 + PC4 + PC5, data = prs_ad_noAPOE)
+        summary(sensitivity_model)
+        summary(sensitivity_model_noAPOE)
+    # Additional cohort info and plot
+        ad = pheno[which(pheno$diagnosis %in% c('Probable_AD', 'Possible_AD', 'AD_path')),]
+        ctr = pheno[which(pheno$diagnosis %in% c("Control_100plus", "Control_LASA", "Control_other_twin", "Control_path", "SCD")),]
+        chc = pheno[which(pheno$diagnosis %in% c('Centenarian')),]
+        off = children_clean[which(children_clean$PHENO %in% c('family_100plus')),]
+        summary(ad$age)
+        summary(ctr$age)
+        summary(chc$age)
+        summary(pheno_final_raw$age[which(pheno_final_raw$ID_GWAS %in% off$IID)])
+        off2 = pheno_final_raw[which(pheno_final_raw$ID_GWAS %in% off$IID),]
+        library(ggplot2)
+        data_ages = data.frame(Type = c(rep('AD', nrow(ad)), rep('Controls', nrow(ctr)), rep('Centenarians', nrow(chc))), age = c(ad$age, ctr$age, chc$age))
+        # rename classes
+        data_ages$Type[which(data_ages$Type == 'AD')] = 'AD cases'
+        data_ages$Type[which(data_ages$Type == 'Controls')] = 'Age-matched controls'
+        data_ages$Type[which(data_ages$Type == 'Centenarians')] = 'Cognitively Healthy Centenarians'
+        data_ages$Type = factor(data_ages$Type, levels = c('AD cases', 'Age-matched controls', 'Cognitively Healthy Centenarians'))
+        plt = ggplot(data_ages, aes(x = Type, y = age, fill = Type)) + geom_violin(alpha = 0.5, width = 1.4) + geom_boxplot(width = 0.07) + theme_bw() + theme(legend.position = 'top', axis.text = element_text(size = 16), axis.title = element_text(size = 18), legend.text = element_text(size = 14)) + xlab('Sample type') + ylab('Age at onset/inclusion')
+        pdf('Downloads/figure_s1_ages.pdf', height=8, width = 14)
+        print(plt)
+        dev.off()
+    # Save workspace updated
+        save.image('path/to/updated_workspace.RData')
+        
+        
+        
